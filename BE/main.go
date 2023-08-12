@@ -1,35 +1,37 @@
 package main
 
 import (
-	"conf/config"
-	"conf/user"
+	"context"
 	"errors"
 	"fmt"
+	"log"
+	"net"
+	"net/http"
 	"os"
+	"os/signal"
+	"time"
 
-	"github.com/jackc/pgx"
+	"conf/user"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 )
 
+// TODO: move this out from the main function
 type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
 func main() {
-	config, err := config.GetConfig()
+	config, err := GetConfig()
 	if err != nil {
 		panic(err)
 	}
 
-	conn, err := pgx.Connect(pgx.ConnConfig{
-		Host:     config.DBHost,
-		Port:     config.DBPort,
-		User:     config.DBUser,
-		Password: config.DBPassword,
-		Database: config.DBName,
-	})
+	conn, err := pgxpool.New(
+		context.Background(),
+		fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.DBUser, config.DBPassword, config.DBHost, config.Port),
+	)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		panic(err)
 	}
 	defer conn.Close()
@@ -37,16 +39,17 @@ func main() {
 	e := echo.New()
 
 	userDomain := user.New(conn)
+	// TODO: move handler out from the main function
 	e.POST("users", func(c echo.Context) error {
 		payload := user.CreateParticipantRequest{}
 		if err := c.Bind(&payload); err != nil {
 			return err
 		}
 
-		err := userDomain.CreateParticipant(payload)
+		err := userDomain.CreateParticipant(c.Request().Context(), payload)
 		if err != nil {
-			if errors.Is(err, user.ErrInvalidUserName) || errors.Is(err, user.ErrInvalidEmail) {
-				c.JSON(400, ErrorResponse{Error: err.Error()})
+			if errors.Is(err, user.ErrValidation) {
+				return c.JSON(400, ErrorResponse{Error: err.Error()})
 			}
 
 			return c.JSON(500, ErrorResponse{Error: "Internal server error"})
@@ -55,5 +58,20 @@ func main() {
 		return c.NoContent(201)
 	})
 
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", config.Port)))
+	exitSig := make(chan os.Signal, 1)
+	signal.Notify(exitSig, os.Interrupt, os.Kill)
+
+	go func() {
+		<-exitSig
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
+
+		if err := e.Shutdown(ctx); err != nil {
+			log.Println(err.Error())
+		}
+	}()
+
+	if err := e.Start(net.JoinHostPort("", config.Port)); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatalln(err)
+	}
 }

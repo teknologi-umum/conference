@@ -16,6 +16,4 @@ COPY --from=build /app/ .
 
 EXPOSE ${PORT}
 
-ENV GO111MODULE=on
-
 CMD ["./app"]

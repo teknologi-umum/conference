@@ -1,27 +1,32 @@
 package user
 
 import (
+	"context"
 	"errors"
+	"fmt"
 
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type User struct {
-	DB *pgx.Conn
+	DB *pgxpool.Pool
 }
 
-func New(DB *pgx.Conn) *User {
+func New(DB *pgxpool.Pool) *User {
+	// TODO: should return error on nil DB, must guarantee returned User is not nil
 	return &User{DB: DB}
 }
 
-type UserType string
+type Type string
+
+const (
+	TypeParticipant Type = "participant"
+	TypeSpeaker     Type = "speaker"
+)
 
 var (
-	ErrInvalidUserName = errors.New("invalid user name")
-	ErrInvalidEmail    = errors.New("invalid email")
-
-	UserTypeParticipant UserType = "participant"
-	UserTypeSpeaker     UserType = "speaker"
+	ErrValidation = errors.New("validation")
 )
 
 type CreateParticipantRequest struct {
@@ -31,21 +36,48 @@ type CreateParticipantRequest struct {
 
 func (c CreateParticipantRequest) validate() error {
 	if c.Name == "" {
-		return ErrInvalidUserName
+		return fmt.Errorf("%w: invalid name", ErrValidation)
 	}
 	if c.Email == "" {
-		return ErrInvalidEmail
+		return fmt.Errorf("%w: invalid email", ErrValidation)
 	}
 	return nil
 }
 
-func (u *User) CreateParticipant(req CreateParticipantRequest) error {
+func (u *User) CreateParticipant(ctx context.Context, req CreateParticipantRequest) error {
 	if err := req.validate(); err != nil {
 		return err
 	}
-	_, err := u.DB.Exec("INSERT INTO users (name, email, type) VALUES ($1, $2, $3)", req.Name, req.Email, UserTypeParticipant)
+
+	c, err := u.DB.Acquire(ctx)
 	if err != nil {
 		return err
 	}
+	defer c.Release()
+
+	t, err := c.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
+	if err != nil {
+		return err
+	}
+
+	_, err = t.Exec(
+		ctx,
+		"INSERT INTO users (name, email, type) VALUES ($1, $2, $3)",
+		req.Name,
+		req.Email,
+		TypeParticipant,
+	)
+	if err != nil {
+		if e := t.Rollback(ctx); e != nil {
+			return fmt.Errorf("%w (%s)", e, err.Error())
+		}
+		return err
+	}
+
+	err = t.Commit(ctx)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

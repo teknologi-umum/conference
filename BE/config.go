@@ -1,4 +1,4 @@
-package config
+package main
 
 import (
 	"github.com/kelseyhightower/envconfig"
@@ -11,7 +11,7 @@ type Config struct {
 	DBPassword string `envconfig:"DB_PASSWORD" default:"postgres"`
 	DBName     string `envconfig:"DB_NAME" default:"postgres"`
 
-	Port string `envconfig:"PORT" default:":8080"`
+	Port string `envconfig:"PORT" default:"8080"`
 }
 
 func GetConfig() (Config, error) {

@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN go build -o -ldflags="-s -w" .
+RUN go build -o app -ldflags="-s -w" .
 
 FROM debian:bookworm-slim AS runtime
 
@@ -15,5 +15,7 @@ ARG PORT=8080
 COPY --from=build /app/ .
 
 EXPOSE ${PORT}
+
+ENV GO111MODULE=on
 
 CMD ["./app"]

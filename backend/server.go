@@ -8,6 +8,10 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
 type ServerConfig struct {
 	userDomain *user.User
 }

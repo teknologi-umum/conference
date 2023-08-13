@@ -21,11 +21,6 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-// TODO: move this out from the main function
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
-
 func main() {
 
 	config, err := GetConfig()

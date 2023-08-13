@@ -1,0 +1,58 @@
+name: Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  ci-backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: golang:1.21-bookworm
+    defaults:
+      run:
+        working-directory: ./BE
+    services:
+      db:
+        image: postgres:15-bookworm
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_USER: postgres
+          POSTGRES_DB: conf
+        options: >-
+          --health-cmd pg_isready -U postgres -d conf
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: Build
+        run: go build -buildvcs=false .
+
+      - name: Run test & coverage
+        run: go test -v -coverprofile=coverage.out -covermode=atomic ./...
+        env:
+          TZ: UTC
+          DB_HOST: db
+          DB_USER: postgres
+          DB_PASSWORD: password
+          DB_NAME: conf
+
+      - uses: codecov/codecov-action@v3

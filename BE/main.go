@@ -26,7 +26,7 @@ type ErrorResponse struct {
 func main() {
 	config, err := GetConfig()
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("Failed to get config")
 	}
 
 	conn, err := pgxpool.New(
@@ -34,7 +34,7 @@ func main() {
 		fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.DBUser, config.DBPassword, config.DBHost, config.Port, config.DBName),
 	)
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("Failed to connect to database")
 	}
 	defer conn.Close()
 
@@ -69,11 +69,11 @@ func main() {
 		defer cancel()
 
 		if err := e.Shutdown(ctx); err != nil {
-			log.Error().Err(err)
+			log.Error().Err(err).Msg("Failed to shutdown server")
 		}
 	}()
 
 	if err := e.Start(net.JoinHostPort("", config.Port)); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Fatal().Err(err)
+		log.Fatal().Err(err).Msg("Failed to start server")
 	}
 }

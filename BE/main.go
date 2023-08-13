@@ -26,17 +26,44 @@ type ErrorResponse struct {
 
 func main() {
 
+	config, err := GetConfig()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to get config")
+	}
+
 	app := &cli.App{
 		Name:  "teknum-conf",
 		Usage: "say a greeting",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "config",
+				Value:       config.DBName,
+				Usage:       "db name",
+				Destination: &config.DBName,
+			},
+			&cli.StringFlag{
+				Name:        "db-user",
+				Value:       config.DBUser,
+				Usage:       "db user",
+				Destination: &config.DBUser,
+			},
+			&cli.StringFlag{
+				Name:        "db-password",
+				Value:       config.DBPassword,
+				Usage:       "db password",
+				Destination: &config.DBPassword,
+			},
+			&cli.StringFlag{
+				Name:        "db-host",
+				Value:       config.DBHost,
+				Usage:       "db host",
+				Destination: &config.DBHost,
+			},
+		},
 		Commands: []*cli.Command{
 			{
 				Name: "server",
 				Action: func(cCtx *cli.Context) error {
-					config, err := GetConfig()
-					if err != nil {
-						log.Fatal().Err(err).Msg("Failed to get config")
-					}
 					conn, err := pgxpool.New(
 						context.Background(),
 						fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.DBUser, config.DBPassword, config.DBHost, config.Port, config.DBName),
@@ -89,7 +116,20 @@ func main() {
 			{
 				Name: "migrate",
 				Action: func(cCtx *cli.Context) error {
-					//TODO: do migration here
+					conn, err := pgxpool.New(
+						context.Background(),
+						fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.DBUser, config.DBPassword, config.DBHost, config.Port, config.DBName),
+					)
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to connect to database")
+					}
+					defer conn.Close()
+
+					migrate := MigrationNew(conn)
+					err = migrate.Migrate(context.Background())
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to migrate database")
+					}
 					log.Info().Msg("Migrating database")
 					return nil
 				},

@@ -17,42 +17,43 @@ func MigrationNew(DB *pgxpool.Pool) *Migration {
 }
 
 func (m *Migration) Migrate(ctx context.Context) (err error) {
-	err = m.DB.Ping(ctx)
+
+	c, err := m.DB.Acquire(ctx)
 	if err != nil {
-		err = fmt.Errorf("failed to ping database: %w", err)
+		err = fmt.Errorf("failed to acquire connection: %w", err)
 		return
 	}
+	defer c.Release()
 
 	tx, err := m.DB.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
 	if err != nil {
 		err = fmt.Errorf("failed to begin transaction: %w", err)
 		return
 	}
-	defer func() {
-		if err != nil {
-			err = tx.Rollback(ctx)
-			if err != nil {
-				log.Err(err).Msg("failed to rollback transaction")
-			}
-
-		} else {
-			log.Info().Msg("migration success")
-		}
-	}()
 
 	for i, queries := range V1() {
 		_, err = tx.Exec(ctx, queries)
 		if err != nil {
+			if errRoll := tx.Rollback(ctx); errRoll != nil {
+				err = fmt.Errorf("failed to rollback transaction: %w", errRoll)
+				return
+			}
 			err = fmt.Errorf("failed to execute migration at %d: with error %w", i, err)
 			return
 		}
+
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
+		if errRoll := tx.Rollback(ctx); errRoll != nil {
+			err = fmt.Errorf("failed to rollback transaction: %w", errRoll)
+			return
+		}
 		err = fmt.Errorf("failed to commit transaction: %w", err)
 		return
 	}
+	log.Info().Msg("migration success")
 	return
 }
 

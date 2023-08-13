@@ -134,7 +134,9 @@ func main() {
 					migrate := MigrationNew(conn)
 					err = migrate.Migrate(context.Background())
 					if err != nil {
+						conn.Close()
 						log.Fatal().Err(err).Msg("Failed to migrate database")
+						return err
 					}
 					log.Info().Msg("Migrating database")
 					return nil

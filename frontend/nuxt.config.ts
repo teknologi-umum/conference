@@ -4,14 +4,21 @@ import presetUno from '@unocss/preset-uno'
 
 
 export default defineNuxtConfig({
+  runtimeConfig: {
+    public: {
+      showAnnouncementDate: true,
+      announcementDate: "21 October 2023",
+      attendeeRegistration: true,
+      speakerRegistration: true,
+      eventSchedule: true,
+      aggressiveIntroduction: true
+    }
+  },
   googleFonts: {
     families: {
       Rubik: true
     }
   },
-  presets: [
-    presetUno(),
-  ],
   app: {
     head: {
       titleTemplate: (t) => t ? `${t} - TeknumConf` : 'TeknumConf' 

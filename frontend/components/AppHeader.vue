@@ -2,14 +2,15 @@
 
 const isMobile = ref(false)
 const showNavbar = ref(true)
-
+function checkWindowSize() {
+    const screenWidth = window.innerWidth
+    isMobile.value = screenWidth < 1024
+    showNavbar.value = !isMobile.value
+}
 onMounted(() => {
     // Get screen width
-    const screenWidth = window.innerWidth
-    isMobile.value = screenWidth < 992
-
-    if(isMobile.value) showNavbar.value = false
-    
+    checkWindowSize()
+    window.addEventListener('resize', checkWindowSize)    
 })
 </script>
 <template>
@@ -54,7 +55,7 @@ onMounted(() => {
     padding: 1rem 1.25rem;
 }
 
-@media screen and (min-width: 992px) {
+@media screen and (min-width: 1024px) {
     .header-right {
         position: static;
         background-color: transparent;

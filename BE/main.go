@@ -59,6 +59,12 @@ func main() {
 				Usage:       "db host",
 				Destination: &config.DBHost,
 			},
+			&cli.StringFlag{
+				Name:        "port",
+				Value:       config.Port,
+				Usage:       "port",
+				Destination: &config.Port,
+			},
 		},
 		Commands: []*cli.Command{
 			{

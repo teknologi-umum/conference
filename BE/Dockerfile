@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN go build -o -ldflags="-s -w" .
+RUN go build -o app -ldflags="-s -w" .
 
 FROM debian:bookworm-slim AS runtime
 

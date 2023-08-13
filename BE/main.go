@@ -4,14 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	"conf/user"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 )
@@ -24,15 +26,15 @@ type ErrorResponse struct {
 func main() {
 	config, err := GetConfig()
 	if err != nil {
-		panic(err)
+		log.Fatal().Err(err)
 	}
 
 	conn, err := pgxpool.New(
 		context.Background(),
-		fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.DBUser, config.DBPassword, config.DBHost, config.Port),
+		fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.DBUser, config.DBPassword, config.DBHost, config.Port, config.DBName),
 	)
 	if err != nil {
-		panic(err)
+		log.Fatal().Err(err)
 	}
 	defer conn.Close()
 
@@ -67,11 +69,11 @@ func main() {
 		defer cancel()
 
 		if err := e.Shutdown(ctx); err != nil {
-			log.Println(err.Error())
+			log.Error().Err(err)
 		}
 	}()
 
 	if err := e.Start(net.JoinHostPort("", config.Port)); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Fatalln(err)
+		log.Fatal().Err(err)
 	}
 }

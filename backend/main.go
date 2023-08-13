@@ -2,20 +2,23 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/urfave/cli/v2"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/rs/zerolog/log"
 
 	"conf/user"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/labstack/echo/v4"
 )
 
@@ -122,23 +125,40 @@ func main() {
 			{
 				Name: "migrate",
 				Action: func(cCtx *cli.Context) error {
-					conn, err := pgxpool.New(
-						context.Background(),
-						fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.DBUser, config.DBPassword, config.DBHost, config.Port, config.DBName),
-					)
+					conn, err := sql.Open(
+						"pgx",
+						fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.DBUser, config.DBPassword, config.DBHost, config.Port, config.DBName))
 					if err != nil {
-						log.Fatal().Err(err).Msg("Failed to connect to database")
+						return fmt.Errorf("failed to connect to database: %w", err)
 					}
-					defer conn.Close()
+					defer func() {
+						err := conn.Close()
+						if err != nil {
+							log.Warn().Err(err).Msg("Closing database")
+						}
+					}()
 
-					migrate := MigrationNew(conn)
-					err = migrate.Migrate(context.Background())
+					migration, err := NewMigration(conn)
 					if err != nil {
-						conn.Close()
-						log.Fatal().Err(err).Msg("Failed to migrate database")
-						return err
+						return fmt.Errorf("failed to create migration: %w", err)
 					}
-					log.Info().Msg("Migrating database")
+					switch cCtx.Args().First() {
+					case "down":
+						err := migration.Down(cCtx.Context)
+						if err != nil {
+							return fmt.Errorf("Executing down migration: %w", err)
+						}
+					case "up":
+						fallthrough
+					default:
+						err := migration.Up(cCtx.Context)
+						if err != nil {
+							return fmt.Errorf("Executing up migration: %w", err)
+						}
+					}
+
+					log.Info().Msg("Migration succeed")
+
 					return nil
 				},
 			},
@@ -177,6 +197,7 @@ func main() {
 			},
 		},
 	}
+
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal().Err(err).Msg("Failed to run app")
 	}

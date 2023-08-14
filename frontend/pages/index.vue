@@ -28,20 +28,25 @@ useHead({
                 </div>
             </div>
         </section>
-        <section id="whats-good" class="section">
+        <section id="whats-good" class="section my-32">
             <div class="container | mx-auto px-5">
-                <div class="section-header text-center mb-8">
-                    <h2 class="section-title | text-4xl">Frequently Asked Questions</h2>
-                </div>
-                <div class="section-content">
-                    <Accordion></Accordion>
+                <div class="flex items-end flex-wrap">
+                    <h2 class="section-title | w-full lg:w-1/2 leading-tight">What's Good on TeknumConf?</h2>
+                    <ul class="list flex-grow-1 mt-5">
+                        <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit</li>
+                        <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit</li>
+                        <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit</li>
+                        <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit</li>
+                        <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit</li>
+                        <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit</li>
+                    </ul>
                 </div>
             </div>
         </section>
         <section id="faq" class="section">
             <div class="container | mx-auto px-5">
-                <div class="section-header text-center mb-8">
-                    <h2 class="section-title | text-4xl">Frequently Asked Questions</h2>
+                <div class="section-header text-center mb-16">
+                    <h2 class="section-title">Frequently Asked Questions</h2>
                 </div>
                 <div class="section-content">
                     <Accordion></Accordion>
@@ -63,5 +68,13 @@ useHead({
 .hero-title {
     font-size: clamp(3rem, 7vw, 10rem);
     font-weight: 400;
+}
+.section-title {
+    font-size: clamp(3rem, 5vw, 4rem);
+}
+.list li {
+    padding: 2rem 1rem;
+    font-size: 1.3rem;
+    border-bottom: 1px solid #ffffff5b;
 }
 </style>

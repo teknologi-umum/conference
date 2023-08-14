@@ -14,6 +14,7 @@ body {
                 linear-gradient(to bottom, #101011, #05051c);
     background-repeat: no-repeat;
     min-height: 100vh;
+    font-size: 1.2rem;
     color: var(--body-color);
 }
 a {
@@ -27,7 +28,7 @@ ul {
     list-style: none;
 }
 .section {
-    margin: 3rem 0;
+    margin: 5rem 0;
 }
 .blur-bg {
     backdrop-filter: blur(20px);

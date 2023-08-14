@@ -18,11 +18,11 @@ onMounted(() => {
         <div class="container | px-5 py-5 mx-auto flex justify-between items-center">
             <div class="header-left">
                 <router-link to="/" class="font-bold">
-                    <img src="@/assets/images/logo.jpg" alt="TeknumConf" height="50">
+                    <img src="@/assets/images/logo_copy.png" alt="TeknumConf" height="60">
                 </router-link>
             </div>
             <Button color="outline-white" v-show="isMobile" @click="showNavbar = !showNavbar">&equiv;</Button>
-            <div class="header-right">
+            <div class="header-right z-10">
                 <nav class="container mx-auto" v-show="showNavbar">
                     <ul class="nav-menu">
                         <li class="nav-item">
@@ -49,8 +49,7 @@ onMounted(() => {
     top: 0;
     right: 0;
     top: 100%;
-}
-.nav-menu {
+    backdrop-filter: blur(100px);
 }
 .nav-link {
     display: block;

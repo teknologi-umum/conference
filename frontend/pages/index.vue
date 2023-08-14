@@ -20,7 +20,13 @@ const config = useRuntimeConfig()
             </div>
         </section>
         <section id="about" class="section">
-            <div class="container | mx-auto">
+            <div class="container | mx-auto px-5">
+                <div class="section-header text-center mb-8">
+                    <h2 class="section-title | text-4xl">Frequently Asked Questions</h2>
+                </div>
+                <div class="section-content">
+                    <Accordion></Accordion>
+                </div>
             </div>
         </section>
     </div>

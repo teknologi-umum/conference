@@ -17,7 +17,9 @@ onMounted(() => {
     <header id="page-header" class="relative">
         <div class="container | px-5 py-5 mx-auto flex justify-between items-center">
             <div class="header-left">
-                <router-link to="/" class="font-bold">TeknumConf</router-link>
+                <router-link to="/" class="font-bold">
+                    <img src="@/assets/images/logo.jpg" alt="TeknumConf" height="50">
+                </router-link>
             </div>
             <Button color="outline-white" v-show="isMobile" @click="showNavbar = !showNavbar">&equiv;</Button>
             <div class="header-right">

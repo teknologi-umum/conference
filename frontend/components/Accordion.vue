@@ -44,4 +44,12 @@ const faq = [
 .accordion-radio:checked ~ .accordion-title {
     background-color: rgba(141, 141, 141, 0.251);
 }
+.accordion-item:first-child {
+    border-top-left-radius: .5rem;
+    border-top-right-radius: .5rem;
+}
+.accordion-item:last-child {
+    border-bottom-left-radius: .5rem;
+    border-bottom-right-radius: .5rem;
+}
 </style>

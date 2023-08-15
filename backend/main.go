@@ -19,13 +19,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/labstack/echo/v4"
 )
-
-// TODO: move this out from the main function
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
 
 func main() {
 
@@ -81,26 +75,11 @@ func main() {
 						log.Fatal().Err(err).Msg("Failed to connect to database")
 					}
 					defer conn.Close()
-					e := echo.New()
 
 					userDomain := user.New(conn)
-					// TODO: move handler out from the main function
-					e.POST("users", func(c echo.Context) error {
-						payload := user.CreateParticipantRequest{}
-						if err := c.Bind(&payload); err != nil {
-							return err
-						}
 
-						err := userDomain.CreateParticipant(c.Request().Context(), payload)
-						if err != nil {
-							if errors.Is(err, user.ErrValidation) {
-								return c.JSON(400, ErrorResponse{Error: err.Error()})
-							}
-
-							return c.JSON(500, ErrorResponse{Error: "Internal server error"})
-						}
-
-						return c.NoContent(201)
+					e := NewServer(&ServerConfig{
+						userDomain: userDomain,
 					})
 
 					exitSig := make(chan os.Signal, 1)

@@ -2,27 +2,24 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/urfave/cli/v2"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/rs/zerolog/log"
 
 	"conf/user"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/labstack/echo/v4"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
-
-// TODO: move this out from the main function
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
 
 func main() {
 
@@ -78,26 +75,11 @@ func main() {
 						log.Fatal().Err(err).Msg("Failed to connect to database")
 					}
 					defer conn.Close()
-					e := echo.New()
 
 					userDomain := user.New(conn)
-					// TODO: move handler out from the main function
-					e.POST("users", func(c echo.Context) error {
-						payload := user.CreateParticipantRequest{}
-						if err := c.Bind(&payload); err != nil {
-							return err
-						}
 
-						err := userDomain.CreateParticipant(c.Request().Context(), payload)
-						if err != nil {
-							if errors.Is(err, user.ErrValidation) {
-								return c.JSON(400, ErrorResponse{Error: err.Error()})
-							}
-
-							return c.JSON(500, ErrorResponse{Error: "Internal server error"})
-						}
-
-						return c.NoContent(201)
+					e := NewServer(&ServerConfig{
+						userDomain: userDomain,
 					})
 
 					exitSig := make(chan os.Signal, 1)
@@ -122,23 +104,40 @@ func main() {
 			{
 				Name: "migrate",
 				Action: func(cCtx *cli.Context) error {
-					conn, err := pgxpool.New(
-						context.Background(),
-						fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.DBUser, config.DBPassword, config.DBHost, config.Port, config.DBName),
-					)
+					conn, err := sql.Open(
+						"pgx",
+						fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.DBUser, config.DBPassword, config.DBHost, config.Port, config.DBName))
 					if err != nil {
-						log.Fatal().Err(err).Msg("Failed to connect to database")
+						return fmt.Errorf("failed to connect to database: %w", err)
 					}
-					defer conn.Close()
+					defer func() {
+						err := conn.Close()
+						if err != nil {
+							log.Warn().Err(err).Msg("Closing database")
+						}
+					}()
 
-					migrate := MigrationNew(conn)
-					err = migrate.Migrate(context.Background())
+					migration, err := NewMigration(conn)
 					if err != nil {
-						conn.Close()
-						log.Fatal().Err(err).Msg("Failed to migrate database")
-						return err
+						return fmt.Errorf("failed to create migration: %w", err)
 					}
-					log.Info().Msg("Migrating database")
+					switch cCtx.Args().First() {
+					case "down":
+						err := migration.Down(cCtx.Context)
+						if err != nil {
+							return fmt.Errorf("Executing down migration: %w", err)
+						}
+					case "up":
+						fallthrough
+					default:
+						err := migration.Up(cCtx.Context)
+						if err != nil {
+							return fmt.Errorf("Executing up migration: %w", err)
+						}
+					}
+
+					log.Info().Msg("Migration succeed")
+
 					return nil
 				},
 			},
@@ -177,6 +176,7 @@ func main() {
 			},
 		},
 	}
+
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal().Err(err).Msg("Failed to run app")
 	}

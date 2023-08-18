@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"conf/user"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -13,7 +14,7 @@ type ErrorResponse struct {
 }
 
 type ServerConfig struct {
-	userDomain *user.User
+	userDomain *user.UserDomain
 }
 
 func NewServer(config *ServerConfig) *echo.Echo {
@@ -29,12 +30,19 @@ func NewServer(config *ServerConfig) *echo.Echo {
 	}))
 
 	e.POST("users", func(c echo.Context) error {
-		payload := user.CreateParticipantRequest{}
-		if err := c.Bind(&payload); err != nil {
+		type payload struct {
+			Name  string `json:"name"`
+			Email string `json:"email"`
+		}
+		p := payload{}
+		if err := c.Bind(&p); err != nil {
 			return err
 		}
 
-		err := config.userDomain.CreateParticipant(c.Request().Context(), payload)
+		err := config.userDomain.CreateParticipant(c.Request().Context(), user.CreateParticipant{
+			Name:  p.Name,
+			Email: p.Email,
+		})
 		if err != nil {
 			if errors.Is(err, user.ErrValidation) {
 				return c.JSON(400, ErrorResponse{Error: err.Error()})

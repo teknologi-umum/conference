@@ -1,15 +1,16 @@
 package main
 
 import (
-	"errors"
-
+	"conf/core"
 	"conf/user"
+	"errors"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 type ErrorResponse struct {
+	Key   string `json:"key"`
 	Error string `json:"error"`
 }
 
@@ -39,13 +40,24 @@ func NewServer(config *ServerConfig) *echo.Echo {
 			return err
 		}
 
-		err := config.userDomain.CreateParticipant(c.Request().Context(), user.CreateParticipant{
+		errs := config.userDomain.CreateParticipant(c.Request().Context(), user.CreateParticipant{
 			Name:  p.Name,
 			Email: p.Email,
 		})
-		if err != nil {
-			if errors.Is(err, user.ErrValidation) {
-				return c.JSON(400, ErrorResponse{Error: err.Error()})
+
+		errorValidations := []ErrorResponse{}
+		if errs != nil {
+			for _, err := range errs {
+				if errors.Is(err.Err, core.ErrValidation) {
+					errorValidations = append(errorValidations, ErrorResponse{
+						Key:   err.Key,
+						Error: err.Err.Error(),
+					})
+				}
+			}
+
+			if len(errorValidations) > 0 {
+				return c.JSON(400, errorValidations)
 			}
 
 			return c.JSON(500, ErrorResponse{Error: "Internal server error"})

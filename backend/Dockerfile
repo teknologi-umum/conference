@@ -1,5 +1,7 @@
 FROM golang:1.21-bookworm AS build
 
+VOLUME /app/csv
+
 WORKDIR /app
 
 COPY . .

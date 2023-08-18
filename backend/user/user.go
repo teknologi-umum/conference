@@ -1,11 +1,12 @@
 package user
 
 import (
+	"conf/core"
 	"context"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -27,10 +28,6 @@ const (
 	TypeSpeaker     Type = "speaker"
 )
 
-var (
-	ErrValidation = errors.New("validation")
-)
-
 type CreateParticipant struct {
 	Name  string
 	Email string
@@ -43,30 +40,45 @@ type User struct {
 	IsProcessed bool
 }
 
-func (c CreateParticipant) validate() error {
+func (c CreateParticipant) validate() (errs core.Errors) {
 	if c.Name == "" {
-		return fmt.Errorf("%w: invalid name", ErrValidation)
+		errs = append(errs, core.Error{
+			Key: "name",
+			Err: fmt.Errorf("%w: invalid name", core.ErrValidation),
+		})
 	}
+
 	if c.Email == "" {
-		return fmt.Errorf("%w: invalid email", ErrValidation)
+		errs = append(errs, core.Error{
+			Key: "email",
+			Err: fmt.Errorf("%w: invalid email", core.ErrValidation),
+		})
 	}
 	return nil
 }
 
-func (u *UserDomain) CreateParticipant(ctx context.Context, req CreateParticipant) error {
+func (u *UserDomain) CreateParticipant(ctx context.Context, req CreateParticipant) (errs core.Errors) {
 	if err := req.validate(); err != nil {
 		return err
 	}
 
 	c, err := u.DB.Acquire(ctx)
 	if err != nil {
-		return err
+		errs = append(errs, core.Error{
+			Key: "db",
+			Err: err,
+		})
+		return errs
 	}
 	defer c.Release()
 
 	t, err := c.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
 	if err != nil {
-		return err
+		errs = append(errs, core.Error{
+			Key: "db",
+			Err: err,
+		})
+		return errs
 	}
 
 	_, err = t.Exec(
@@ -78,14 +90,22 @@ func (u *UserDomain) CreateParticipant(ctx context.Context, req CreateParticipan
 	)
 	if err != nil {
 		if e := t.Rollback(ctx); e != nil {
-			return fmt.Errorf("%w (%s)", e, err.Error())
+			errs = append(errs, core.Error{
+				Key: "db",
+				Err: fmt.Errorf("%w (%s)", e, err.Error()),
+			})
+			return errs
 		}
-		return err
+		return errs
 	}
 
 	err = t.Commit(ctx)
 	if err != nil {
-		return err
+		errs = append(errs, core.Error{
+			Key: "db",
+			Err: err,
+		})
+		return errs
 	}
 
 	return nil
@@ -145,11 +165,11 @@ func (u *UserDomain) ExportUnprocessedUsersAsCSV(ctx context.Context) error {
 			user.Name,
 			user.Email,
 			string(user.Type),
-			fmt.Sprintf("%t", user.IsProcessed),
+			strconv.FormatBool(user.IsProcessed),
 		})
 	}
 
-	csvFile, err := os.Create("users.csv")
+	csvFile, err := os.Create("./app/csv/users.csv")
 	if err != nil {
 		return err
 	}

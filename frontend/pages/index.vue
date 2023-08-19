@@ -33,12 +33,11 @@ useHead({
                 <div class="flex items-end flex-wrap">
                     <h2 class="section-title | w-full lg:w-1/2 leading-tight">What's Good on TeknumConf?</h2>
                     <ul class="list flex-grow-1 mt-5">
-                        <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit</li>
-                        <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit</li>
-                        <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit</li>
-                        <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit</li>
-                        <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit</li>
-                        <li>Lorem, ipsum dolor sit amet consectetur adipisicing elit</li>
+                        <li>Get to attend technology related workshop</li>
+                        <li>Also attend non-technology related workshop, refreshen your mind</li>
+                        <li>Career advice talk show from wide-ranging backgrounds</li>
+                        <li>Hangout and network yourself with others</li>
+                        <li v-if="config.public.fifaChampionship">Local FIFA championship, just to have some fun!</li>
                     </ul>
                 </div>
             </div>

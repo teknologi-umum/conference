@@ -11,7 +11,8 @@ export default defineNuxtConfig({
       attendeeRegistration: true,
       speakerRegistration: true,
       eventSchedule: true,
-      aggressiveIntroduction: true
+      aggressiveIntroduction: true,
+      fifaChampionship: true,
     }
   },
   googleFonts: {

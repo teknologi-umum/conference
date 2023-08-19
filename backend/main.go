@@ -144,9 +144,19 @@ func main() {
 			{
 				Name: "dump-attendees",
 				Action: func(cCtx *cli.Context) error {
-					//TODO: get attendees from postgres and dump to csv in stdout
-					log.Info().Msg("Dumping attendees")
-					return nil
+					conn, err := pgxpool.New(
+						context.Background(),
+						fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.DBUser, config.DBPassword, config.DBHost, config.Port, config.DBName),
+					)
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to connect to database")
+					}
+					defer conn.Close()
+
+					userDomain := user.New(conn)
+
+					err = userDomain.ExportUnprocessedUsersAsCSV(cCtx.Context)
+					return err
 				},
 			},
 			{

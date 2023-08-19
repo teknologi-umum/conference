@@ -1,19 +1,21 @@
 package main
 
 import (
+	"conf/core"
+	"conf/user"
 	"errors"
 
-	"conf/user"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 type ErrorResponse struct {
+	Key   string `json:"key"`
 	Error string `json:"error"`
 }
 
 type ServerConfig struct {
-	userDomain *user.User
+	userDomain *user.UserDomain
 }
 
 func NewServer(config *ServerConfig) *echo.Echo {
@@ -29,15 +31,33 @@ func NewServer(config *ServerConfig) *echo.Echo {
 	}))
 
 	e.POST("users", func(c echo.Context) error {
-		payload := user.CreateParticipantRequest{}
-		if err := c.Bind(&payload); err != nil {
+		type payload struct {
+			Name  string `json:"name"`
+			Email string `json:"email"`
+		}
+		p := payload{}
+		if err := c.Bind(&p); err != nil {
 			return err
 		}
 
-		err := config.userDomain.CreateParticipant(c.Request().Context(), payload)
-		if err != nil {
-			if errors.Is(err, user.ErrValidation) {
-				return c.JSON(400, ErrorResponse{Error: err.Error()})
+		errs := config.userDomain.CreateParticipant(c.Request().Context(), user.CreateParticipant{
+			Name:  p.Name,
+			Email: p.Email,
+		})
+
+		errorValidations := []ErrorResponse{}
+		if errs != nil {
+			for _, err := range errs {
+				if errors.Is(err.Err, core.ErrValidation) {
+					errorValidations = append(errorValidations, ErrorResponse{
+						Key:   err.Key,
+						Error: err.Err.Error(),
+					})
+				}
+			}
+
+			if len(errorValidations) > 0 {
+				return c.JSON(400, errorValidations)
 			}
 
 			return c.JSON(500, ErrorResponse{Error: "Internal server error"})

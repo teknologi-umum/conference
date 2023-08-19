@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN go build -o app -ldflags="-s -w" .
+RUN go build -o conf-backend -ldflags="-s -w" .
 
 FROM debian:bookworm-slim AS runtime
 
@@ -12,8 +12,10 @@ WORKDIR /app
 
 ARG PORT=8080
 
+RUN mkdir -p /app/csv
+
 COPY --from=build /app/ .
 
 EXPOSE ${PORT}
 
-CMD ["./app"]
+CMD ["/app/conf-backend", "server"]

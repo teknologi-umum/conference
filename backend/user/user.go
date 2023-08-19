@@ -169,7 +169,7 @@ func (u *UserDomain) ExportUnprocessedUsersAsCSV(ctx context.Context) error {
 		})
 	}
 
-	csvFile, err := os.Create("./app/csv/users.csv")
+	csvFile, err := os.Create("/app/csv/users.csv")
 	if err != nil {
 		return err
 	}

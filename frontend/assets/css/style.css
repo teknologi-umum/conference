@@ -1,5 +1,8 @@
 :root {
     --body-color: #ddd;
+    --color-primary: #5451fb;
+    --color-primary-gradient:  linear-gradient(to right, #4845ff, #4730e0);
+    --color-primary-gradient-hover:  linear-gradient(to right, #4f64fd, #4730e0);
 }
 * {
     margin: 0;
@@ -34,4 +37,13 @@ ul {
 .blur-bg {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+}
+.container-sm {
+    max-width: 900px;
+}
+.single p {
+    margin-bottom: 4rem;
+    line-height: 1.6;
+    letter-spacing: .3px;
+    color: #ddd;
 }

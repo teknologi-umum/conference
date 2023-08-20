@@ -22,7 +22,6 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      titleTemplate: (t) => t ? `${t} - TeknumConf` : 'TeknumConf' 
     }
   },
   css: ['assets/css/style.css'],

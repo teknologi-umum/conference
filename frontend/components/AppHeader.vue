@@ -21,18 +21,18 @@ onMounted(() => {
                     <img src="@/assets/images/logo_copy.png" alt="TeknumConf" height="60">
                 </router-link>
             </div>
-            <Button color="outline-white" v-show="isMobile" @click="showNavbar = !showNavbar">&equiv;</Button>
+            <Btn color="outline-white" v-show="isMobile" @click="showNavbar = !showNavbar">&equiv;</Btn>
             <div class="header-right z-10">
                 <nav class="container mx-auto" v-show="showNavbar">
-                    <ul class="nav-menu">
+                    <ul class="nav-menu list-none">
                         <li class="nav-item">
-                            <router-link class="nav-link" to="#hero">Home</router-link>
+                            <router-link class="nav-link white" to="#hero">Home</router-link>
                         </li>
                         <li class="nav-item">
-                            <router-link class="nav-link" to="#about">About</router-link>
+                            <router-link class="nav-link white" to="#about">About</router-link>
                         </li>
                         <li class="nav-item">
-                            <router-link class="nav-link" to="#faq">FAQ</router-link>
+                            <router-link class="nav-link white" to="#faq">FAQ</router-link>
                         </li>
                     </ul>
                 </nav>

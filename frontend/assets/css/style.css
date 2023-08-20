@@ -21,15 +21,19 @@ body {
     font-size: 1.2rem;
     color: var(--body-color);
 }
-a {
-    color: rgb(220, 220, 220);
-    text-decoration: none;
+a.white {
+    color: #ccc;
 }
-a:hover {
+a.white:hover {
     color: white;
 }
-ul {
-    list-style: none;
+a {
+    color: rgb(155, 139, 249);
+    text-decoration: none;
+    transition: all .2s;
+}
+a:hover {
+    color: rgb(188, 176, 255);
 }
 .section {
     margin: 6rem 0;
@@ -41,7 +45,7 @@ ul {
 .container-sm {
     max-width: 900px;
 }
-.single p {
+.single p, .single label {
     margin-bottom: 4rem;
     line-height: 1.6;
     letter-spacing: .3px;

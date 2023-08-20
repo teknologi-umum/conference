@@ -1,8 +1,4 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-import transformerDirectives from '@unocss/transformer-directives'
-import presetUno from '@unocss/preset-uno'
-
-
 export default defineNuxtConfig({
   runtimeConfig: {
     public: {

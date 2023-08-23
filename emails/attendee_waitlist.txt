@@ -1,0 +1,4 @@
+Hello, {{ name }}!
+Thank you for participating on TeknumConf, due to the limited seating quota, you are on a waitlist.
+Not to worry, you will receive an email from us regarding the seating in about 7 days.
+Please do contact us if you didn't receive any email by then.

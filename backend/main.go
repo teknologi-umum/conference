@@ -22,7 +22,6 @@ import (
 )
 
 func main() {
-
 	config, err := GetConfig()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to get config")

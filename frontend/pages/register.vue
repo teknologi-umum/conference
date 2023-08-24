@@ -1,6 +1,15 @@
 <script setup lang="ts">
-const submit = () => {
+const fullName = ref<string>("");
+const email = ref<string>("");
+const config = useRuntimeConfig();
+const submit = async () => {
+    const response = await useFetch(`${config.public.backendBaseUrl}/users`, { method: "POST" });
+    if (response.error != null) {
+        // TODO: handle on registration response error
+        return;
+    }
 
+    // TODO: handle success response
 }
 </script>
 
@@ -12,11 +21,11 @@ const submit = () => {
             <form @submit.prevent="submit" action="" class="max-w-[500px] mb-24">
                 <div class="form-group mb-5">
                     <label for="full-name">Full name</label>
-                    <input type="text" id='full-name' class="form-control-lg" placeholder="Juned">
+                    <input type="text" id='full-name' class="form-control-lg" placeholder="Juned" v-model="fullName">
                 </div>
                 <div class="form-group mb-8">
                     <label for="email-address">Email address</label>
-                    <input type="email" id='email-address' class="form-control-lg" placeholder="juned@company.com">
+                    <input type="email" id='email-address' class="form-control-lg" placeholder="juned@company.com" v-model="email">
                 </div>
                 <Btn size="lg">Save my spot</Btn>
             </form>

@@ -64,3 +64,6 @@ services:
       driver: local
       options:
         max-size: 10M
+
+volumes:
+  postgres-data:

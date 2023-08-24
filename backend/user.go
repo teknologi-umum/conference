@@ -1,10 +1,8 @@
-package user
+package main
 
 import (
-	"conf/core"
 	"context"
 	"encoding/csv"
-	"fmt"
 	"os"
 	"strconv"
 
@@ -13,12 +11,15 @@ import (
 )
 
 type UserDomain struct {
-	DB *pgxpool.Pool
+	db *pgxpool.Pool
 }
 
-func New(DB *pgxpool.Pool) *UserDomain {
-	// TODO: should return error on nil DB, must guarantee returned User is not nil
-	return &UserDomain{DB: DB}
+func NewUserDomain(db *pgxpool.Pool) *UserDomain {
+	if db == nil {
+		panic("db is nil")
+	}
+
+	return &UserDomain{db: db}
 }
 
 type Type string
@@ -28,7 +29,7 @@ const (
 	TypeSpeaker     Type = "speaker"
 )
 
-type CreateParticipant struct {
+type CreateParticipantRequest struct {
 	Name  string
 	Email string
 }
@@ -40,45 +41,32 @@ type User struct {
 	IsProcessed bool
 }
 
-func (c CreateParticipant) validate() (errs core.Errors) {
+func (c CreateParticipantRequest) validate() (errors []string) {
 	if c.Name == "" {
-		errs = append(errs, core.Error{
-			Key: "name",
-			Err: fmt.Errorf("%w: invalid name", core.ErrValidation),
-		})
+		errors = append(errors, "Invalid name")
 	}
 
 	if c.Email == "" {
-		errs = append(errs, core.Error{
-			Key: "email",
-			Err: fmt.Errorf("%w: invalid email", core.ErrValidation),
-		})
+		errors = append(errors, "Invalid email")
 	}
-	return nil
+
+	return errors
 }
 
-func (u *UserDomain) CreateParticipant(ctx context.Context, req CreateParticipant) (errs core.Errors) {
-	if err := req.validate(); err != nil {
-		return err
+func (u *UserDomain) CreateParticipant(ctx context.Context, req CreateParticipantRequest) error {
+	if errors := req.validate(); len(errors) > 0 {
+		return &ValidationError{Errors: errors}
 	}
 
-	c, err := u.DB.Acquire(ctx)
+	c, err := u.db.Acquire(ctx)
 	if err != nil {
-		errs = append(errs, core.Error{
-			Key: "db",
-			Err: err,
-		})
-		return errs
+		return err
 	}
 	defer c.Release()
 
 	t, err := c.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
 	if err != nil {
-		errs = append(errs, core.Error{
-			Key: "db",
-			Err: err,
-		})
-		return errs
+		return err
 	}
 
 	_, err = t.Exec(
@@ -90,34 +78,26 @@ func (u *UserDomain) CreateParticipant(ctx context.Context, req CreateParticipan
 	)
 	if err != nil {
 		if e := t.Rollback(ctx); e != nil {
-			errs = append(errs, core.Error{
-				Key: "db",
-				Err: fmt.Errorf("%w (%s)", e, err.Error()),
-			})
-			return errs
+			return e
 		}
-		return errs
+		return err
 	}
 
 	err = t.Commit(ctx)
 	if err != nil {
-		errs = append(errs, core.Error{
-			Key: "db",
-			Err: err,
-		})
-		return errs
+		return err
 	}
 
 	return nil
 }
 
-type UserFilter struct {
+type UserFilterRequest struct {
 	Type        Type
 	IsProcessed bool
 }
 
-func (u *UserDomain) GetUsers(ctx context.Context, filter UserFilter) ([]User, error) {
-	c, err := u.DB.Acquire(ctx)
+func (u *UserDomain) GetUsers(ctx context.Context, filter UserFilterRequest) ([]User, error) {
+	c, err := u.db.Acquire(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +117,7 @@ func (u *UserDomain) GetUsers(ctx context.Context, filter UserFilter) ([]User, e
 	var users []User
 	for rows.Next() {
 		var user User
-		err = rows.Scan(&user.Name, &user.Email, &user.Type, &user.IsProcessed)
+		err := rows.Scan(&user.Name, &user.Email, &user.Type, &user.IsProcessed)
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +128,7 @@ func (u *UserDomain) GetUsers(ctx context.Context, filter UserFilter) ([]User, e
 }
 
 func (u *UserDomain) ExportUnprocessedUsersAsCSV(ctx context.Context) error {
-	users, err := u.GetUsers(ctx, UserFilter{
+	users, err := u.GetUsers(ctx, UserFilterRequest{
 		Type:        TypeParticipant,
 		IsProcessed: false,
 	})

@@ -1,25 +1,24 @@
 package main
 
 import (
-	"conf/core"
-	"conf/user"
 	"errors"
+	"net/http"
+
+	sentryecho "github.com/getsentry/sentry-go/echo"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
-type ErrorResponse struct {
-	Key   string `json:"key"`
-	Error string `json:"error"`
-}
-
 type ServerConfig struct {
-	userDomain *user.UserDomain
+	userDomain *UserDomain
 }
 
 func NewServer(config *ServerConfig) *echo.Echo {
 	e := echo.New()
+
+	sentryMiddleware := sentryecho.New(sentryecho.Options{Repanic: false})
+	e.Use(sentryMiddleware)
 
 	// NOTE: Only need to handle CORS, everything else is being handled by the API gateway
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -30,40 +29,52 @@ func NewServer(config *ServerConfig) *echo.Echo {
 		MaxAge:           3600, // 1 day
 	}))
 
-	e.POST("users", func(c echo.Context) error {
+	e.Use(middleware.RequestID())
+
+	e.POST("/users", func(c echo.Context) error {
+		requestId := c.Request().Header.Get(echo.HeaderXRequestID)
+		sentryHub := sentryecho.GetHubFromContext(c)
+		sentryHub.Scope().SetTag("request-id", requestId)
+
 		type payload struct {
 			Name  string `json:"name"`
 			Email string `json:"email"`
 		}
 		p := payload{}
 		if err := c.Bind(&p); err != nil {
-			return err
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message":    "Invalid request body",
+				"errors":     err.Error(),
+				"request_id": requestId,
+			})
 		}
 
-		errs := config.userDomain.CreateParticipant(c.Request().Context(), user.CreateParticipant{
-			Name:  p.Name,
-			Email: p.Email,
-		})
-
-		errorValidations := []ErrorResponse{}
-		if errs != nil {
-			for _, err := range errs {
-				if errors.Is(err.Err, core.ErrValidation) {
-					errorValidations = append(errorValidations, ErrorResponse{
-						Key:   err.Key,
-						Error: err.Err.Error(),
-					})
-				}
+		err := config.userDomain.CreateParticipant(
+			c.Request().Context(),
+			CreateParticipantRequest{
+				Name:  p.Name,
+				Email: p.Email,
+			},
+		)
+		if err != nil {
+			var validationError *ValidationError
+			if errors.As(err, &validationError) {
+				return c.JSON(http.StatusBadRequest, echo.Map{
+					"message":    "Validation error",
+					"errors":     validationError.Errors,
+					"request_id": requestId,
+				})
 			}
 
-			if len(errorValidations) > 0 {
-				return c.JSON(400, errorValidations)
-			}
-
-			return c.JSON(500, ErrorResponse{Error: "Internal server error"})
+			sentryHub.CaptureException(err)
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"message":    "Internal server error",
+				"errors":     "Internal server error",
+				"request_id": requestId,
+			})
 		}
 
-		return c.NoContent(201)
+		return c.NoContent(http.StatusCreated)
 	})
 
 	return e

@@ -3,6 +3,7 @@ module conf
 go 1.21
 
 require (
+	github.com/getsentry/sentry-go v0.23.0
 	github.com/jackc/pgx/v5 v5.4.3
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.11.1

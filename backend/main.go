@@ -15,8 +15,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"conf/user"
-
+	"github.com/getsentry/sentry-go"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -25,6 +24,18 @@ func main() {
 	config, err := GetConfig()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to get config")
+	}
+
+	err = sentry.Init(sentry.ClientOptions{
+		Dsn:              "",
+		Debug:            config.Environment != "production",
+		AttachStacktrace: false,
+		SampleRate:       1.0,
+		Environment:      config.Environment,
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("Initiating sentry")
+		return
 	}
 
 	app := &cli.App{
@@ -68,14 +79,21 @@ func main() {
 				Action: func(cCtx *cli.Context) error {
 					conn, err := pgxpool.New(
 						context.Background(),
-						fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.DBUser, config.DBPassword, config.DBHost, config.Port, config.DBName),
+						fmt.Sprintf(
+							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
+							config.DBUser,
+							config.DBPassword,
+							config.DBHost,
+							config.DBPort,
+							config.DBName,
+						),
 					)
 					if err != nil {
 						log.Fatal().Err(err).Msg("Failed to connect to database")
 					}
 					defer conn.Close()
 
-					userDomain := user.New(conn)
+					userDomain := NewUserDomain(conn)
 
 					e := NewServer(&ServerConfig{
 						userDomain: userDomain,
@@ -97,6 +115,7 @@ func main() {
 					if err := e.Start(net.JoinHostPort("", config.Port)); err != nil && !errors.Is(err, http.ErrServerClosed) {
 						log.Fatal().Err(err).Msg("Failed to start server")
 					}
+
 					return nil
 				},
 			},
@@ -105,7 +124,14 @@ func main() {
 				Action: func(cCtx *cli.Context) error {
 					conn, err := sql.Open(
 						"pgx",
-						fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.DBUser, config.DBPassword, config.DBHost, config.Port, config.DBName))
+						fmt.Sprintf(
+							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
+							config.DBUser,
+							config.DBPassword,
+							config.DBHost,
+							config.DBPort,
+							config.DBName,
+						))
 					if err != nil {
 						return fmt.Errorf("failed to connect to database: %w", err)
 					}
@@ -145,14 +171,21 @@ func main() {
 				Action: func(cCtx *cli.Context) error {
 					conn, err := pgxpool.New(
 						context.Background(),
-						fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable", config.DBUser, config.DBPassword, config.DBHost, config.Port, config.DBName),
+						fmt.Sprintf(
+							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
+							config.DBUser,
+							config.DBPassword,
+							config.DBHost,
+							config.DBPort,
+							config.DBName,
+						),
 					)
 					if err != nil {
 						log.Fatal().Err(err).Msg("Failed to connect to database")
 					}
 					defer conn.Close()
 
-					userDomain := user.New(conn)
+					userDomain := NewUserDomain(conn)
 
 					err = userDomain.ExportUnprocessedUsersAsCSV(cCtx.Context)
 					return err

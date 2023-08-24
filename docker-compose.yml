@@ -1,3 +1,7 @@
+# DISCLAIMER:
+#   We use this docker compose file for development purposes only.
+#   Please don't directly use this configuration for production deployment.
+
 services:
   postgres:
     image: postgres:15.3-bookworm
@@ -35,6 +39,45 @@ services:
       options:
         max-size: 10M
 
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - 127.0.0.1:1025:1025
+      - 127.0.0.1:8025:8025
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+        delay: 30s
+        window: 120s
+      resources:
+        limits:
+          memory: 500MB
+          cpus: '1'
+    logging:
+      driver: local
+      options:
+        max-size: 10M
+
+  backend-migrate:
+    build: ./backend
+    entrypoint: /app/conf-backend migrate up
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: conference
+      DB_PASSWORD: VeryStrongPassword
+      DB_NAME: conference
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging:
+      driver: local
+      options:
+        max-size: 10M
+
   backend:
     build: ./backend
     ports:
@@ -47,8 +90,12 @@ services:
       DB_NAME: conference
       PORT: 8080
     depends_on:
+      backend-migrate:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
+      mailhog:
+        condition: service_started
     logging:
       driver: local
       options:

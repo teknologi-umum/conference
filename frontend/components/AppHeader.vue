@@ -26,13 +26,13 @@ onMounted(() => {
                 <nav class="container mx-auto" v-show="showNavbar">
                     <ul class="nav-menu list-none">
                         <li class="nav-item">
-                            <router-link class="nav-link white" to="#hero">Home</router-link>
+                            <router-link class="nav-link white" to="/#hero">Home</router-link>
                         </li>
                         <li class="nav-item">
-                            <router-link class="nav-link white" to="#about">About</router-link>
+                            <router-link class="nav-link white" to="/#whats-good">About</router-link>
                         </li>
                         <li class="nav-item">
-                            <router-link class="nav-link white" to="#faq">FAQ</router-link>
+                            <router-link class="nav-link white" to="/#faq">FAQ</router-link>
                         </li>
                     </ul>
                 </nav>

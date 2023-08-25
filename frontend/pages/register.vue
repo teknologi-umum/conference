@@ -2,14 +2,38 @@
 const fullName = ref<string>("");
 const email = ref<string>("");
 const config = useRuntimeConfig();
+const alert = reactive({
+    type: "",
+    msg: ""
+})
+
 const submit = async () => {
-    const response = await useFetch(`${config.public.backendBaseUrl}/users`, { method: "POST" });
-    if (response.error != null) {
+    const response = await useFetch(`${config.public.backendBaseUrl}/users`, { 
+        method: "POST", 
+        body: {
+            email: email.value,
+            name: fullName.value
+        }
+    });
+    alert.type = 'success'
+    alert.msg = "Registration success. Invitation sent to your email."
+    if (response.error.value != null) {
         // TODO: handle on registration response error
+        alert.type = 'danger'
+
+        alert.msg = response.error.value?.data?.message
+        
+        if(response.error.value?.statusCode == 400) {
+            alert.msg = "Please check your input"
+        }
+
+        
         return;
     }
+    
 
-    // TODO: handle success response
+    email.value = ''
+    fullName.value = ''
 }
 </script>
 
@@ -17,7 +41,7 @@ const submit = async () => {
     <div id="page">
         <SinglePage title="Save your spot!">
             <p class="desc">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consectetur illo dicta, dolor commodi voluptates sit. </p>
-
+            <div :class="`alert alert-${alert.type} mb-5`" v-if="alert.type !== ''">{{ alert.msg }}</div>
             <form @submit.prevent="submit" action="" class="max-w-[500px] mb-24">
                 <div class="form-group mb-5">
                     <label for="full-name">Full name</label>
@@ -56,5 +80,15 @@ const submit = async () => {
     outline: none;
     background-color: #c1c1c128;
     border-color: #eeeeee;
+}
+.alert {
+    padding: 1rem;
+    border-radius: .4rem;
+}
+.alert-danger {
+    background-color: rgba(193, 60, 60, 0.859);
+}
+.alert-success {
+    background-color: rgb(42 141 45);
 }
 </style>

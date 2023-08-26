@@ -76,7 +76,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ghcr.io/teknologi-umum/conf-frontend
+          images: ghcr.io/teknologi-umum/conf-backend
           flavor: |
             latest=true
           tags: |

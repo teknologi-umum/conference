@@ -72,6 +72,30 @@ func main() {
 				Usage:       "port",
 				Destination: &config.Port,
 			},
+			&cli.StringFlag{
+				Name:        "smtp-hostname",
+				Value:       config.SmtpHostname,
+				Usage:       "smtp hostname",
+				Destination: &config.SmtpHostname,
+			},
+			&cli.StringFlag{
+				Name:        "smtp-port",
+				Value:       config.SmtpPort,
+				Usage:       "smtp port",
+				Destination: &config.SmtpPort,
+			},
+			&cli.StringFlag{
+				Name:        "smtp-from",
+				Value:       config.SmtpFrom,
+				Usage:       "smtp from",
+				Destination: &config.SmtpFrom,
+			},
+			&cli.StringFlag{
+				Name:        "smtp-password",
+				Value:       config.SmtpPassword,
+				Usage:       "smtp password",
+				Destination: &config.SmtpPassword,
+			},
 		},
 		Commands: []*cli.Command{
 			{
@@ -202,17 +226,41 @@ func main() {
 					if templateArg == "" {
 						log.Fatal().Msg("Template is required")
 					}
-
 					if len(emailList) == 0 {
 						log.Fatal().Msg("Email list is required for blasting email minimum 1 email")
 					}
 
+					htmlContent, err := os.ReadFile(templateArg)
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to read template")
+					}
+
+					mailSender := NewMailSender(&MailConfiguration{
+						SmtpHostname: config.SmtpHostname,
+						SmtpPort:     config.SmtpPort,
+						SmtpFrom:     config.SmtpFrom,
+						SmtpPassword: config.SmtpPassword,
+					})
 					for _, email := range emailList {
+						mail := &Mail{
+							RecipientName:  email,
+							RecipientEmail: email,
+							Subject:        "TeknumConf - Attendee Waitlist",
+							PlainTextBody: fmt.Sprintf(`Hello, %s!
+					Thank you for participating on TeknumConf, due to the limited seating quota, you are on a waitlist.
+					Not to worry, you will receive an email from us regarding the seating in about 7 days.
+					Please do contact us if you didn't receive any email by then.`, email),
+							HtmlBody: string(htmlContent),
+						}
+						err := mailSender.Send(mail)
+						if err != nil {
+							log.Error().Err(err).Msgf("Failed to send email to %s", email)
+							continue
+						}
 						log.Info().Msgf("Sending email to %s", email)
 					}
 
-					//TODO: send email to all attendees. Implement email your logic here
-					log.Info().Msg("Blasting email")
+					log.Info().Msg("Blasting email done")
 					return nil
 				},
 			},

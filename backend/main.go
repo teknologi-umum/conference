@@ -75,30 +75,6 @@ func main() {
 				Usage:       "port",
 				Destination: &config.Port,
 			},
-			&cli.StringFlag{
-				Name:        "smtp-hostname",
-				Value:       config.SmtpHostname,
-				Usage:       "smtp hostname",
-				Destination: &config.SmtpHostname,
-			},
-			&cli.StringFlag{
-				Name:        "smtp-port",
-				Value:       config.SmtpPort,
-				Usage:       "smtp port",
-				Destination: &config.SmtpPort,
-			},
-			&cli.StringFlag{
-				Name:        "smtp-from",
-				Value:       config.SmtpFrom,
-				Usage:       "smtp from",
-				Destination: &config.SmtpFrom,
-			},
-			&cli.StringFlag{
-				Name:        "smtp-password",
-				Value:       config.SmtpPassword,
-				Usage:       "smtp password",
-				Destination: &config.SmtpPassword,
-			},
 		},
 		Commands: []*cli.Command{
 			{
@@ -222,14 +198,13 @@ func main() {
 				Name: "blast-email",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:        "smtp.hostname",
-						Value:       config.SmtpHostname,
-						Usage:       "SMTP hostname",
-						Destination: &config.SmtpHostname,
+						Name:  "smtp.hostname",
+						Value: "",
+						Usage: "SMTP hostname",
 					},
 					&cli.StringFlag{
 						Name:  "smtp.port",
-						Value: "587",
+						Value: "",
 						Usage: "SMTP port",
 					},
 					&cli.StringFlag{

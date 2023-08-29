@@ -10,7 +10,6 @@ import (
 )
 
 func csvReader(file string) (err error, users []User) {
-	var userList []User
 	r := csv.NewReader(strings.NewReader(file))
 	header, err := r.Read()
 	if err != nil {
@@ -32,10 +31,10 @@ func csvReader(file string) (err error, users []User) {
 		if m["email"] == "" {
 			log.Fatal().Msg("Email is required")
 		}
-		userList = append(userList, User{
+		users = append(users, User{
 			Name:  m["name"],
 			Email: m["email"],
 		})
 	}
-	return nil, userList
+	return
 }

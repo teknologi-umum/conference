@@ -5,8 +5,6 @@ import (
 	"errors"
 	"io"
 	"strings"
-
-	"github.com/rs/zerolog/log"
 )
 
 func csvReader(file string) (users []User, err error) {
@@ -26,10 +24,12 @@ func csvReader(file string) (users []User, err error) {
 			m[h] = record[i]
 		}
 		if m["name"] == "" {
-			log.Fatal().Msg("Username is required")
+			err = errors.New("name is required")
+			return
 		}
 		if m["email"] == "" {
-			log.Fatal().Msg("Email is required")
+			err = errors.New("email is required")
+			return
 		}
 		users = append(users, User{
 			Name:  m["name"],

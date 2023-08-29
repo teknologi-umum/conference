@@ -277,6 +277,9 @@ func main() {
 					}
 
 					userList, err := csvReader(string(emailList))
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to parse email list")
+					}
 
 					mailSender := NewMailSender(&MailConfiguration{
 						SmtpHostname: smtpHostname,

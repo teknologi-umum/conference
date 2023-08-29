@@ -9,11 +9,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func csvReader(file string) (err error, users []User) {
+func csvReader(file string) (users []User, err error) {
 	r := csv.NewReader(strings.NewReader(file))
 	header, err := r.Read()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to read csv header")
+		err = errors.New("failed to read csv header")
 		return
 	}
 	for {

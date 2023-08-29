@@ -276,7 +276,7 @@ func main() {
 						log.Fatal().Err(err).Msg("Failed to read email list")
 					}
 
-					err, userList := csvReader(string(emailList))
+					userList, err := csvReader(string(emailList))
 
 					mailSender := NewMailSender(&MailConfiguration{
 						SmtpHostname: smtpHostname,

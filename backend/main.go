@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/csv"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/urfave/cli/v2"
@@ -216,50 +219,144 @@ func main() {
 				},
 			},
 			{
-				Name:      "blast-email",
-				Usage:     "blast-email [template] [file list destination of emails]",
-				ArgsUsage: "[template] [file list destination of emails]",
+				Name: "blast-email",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "smtp.hostname",
+						Value:       config.SmtpHostname,
+						Usage:       "SMTP hostname",
+						Destination: &config.SmtpHostname,
+					},
+					&cli.StringFlag{
+						Name:  "smtp.port",
+						Value: "587",
+						Usage: "SMTP port",
+					},
+					&cli.StringFlag{
+						Name:  "smtp.from",
+						Value: "admin@localhost",
+						Usage: "SMTP sender email",
+					},
+					&cli.StringFlag{
+						Name:  "smtp.password",
+						Value: "",
+						Usage: "SMTP password",
+					},
+					&cli.StringFlag{
+						Name:     "subject",
+						Value:    "",
+						Usage:    "Email subject",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "plaintext-body",
+						Value:    "",
+						Usage:    "Path to plaintext body file",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "html-body",
+						Value:    "",
+						Usage:    "Path to HTML body file",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "recipients",
+						Value:    "",
+						Usage:    "Path to CSV file containing list of emails",
+						Required: true,
+					},
+				},
+				Usage:     "blast-email [subject] [template-plaintext] [template-html-body] [csv-file list destination of emails]",
+				ArgsUsage: "[subject] [template-plaintext] [template-html-body] [path-csv-file]",
 				Action: func(cCtx *cli.Context) error {
-					templateArg := cCtx.Args().Get(0)
-					emailList := cCtx.Args().Tail()
+					smtpHostname := cCtx.String("smtp.hostname")
+					smtpPort := cCtx.String("smtp.port")
+					smtpFrom := cCtx.String("smtp.from")
+					smtpPassword := cCtx.String("smtp.password")
+					subject := cCtx.String("subject")
+					plaintext := cCtx.String("plaintext-body")
+					htmlBody := cCtx.String("html-body")
+					mailCsv := cCtx.String("recipients")
 
-					if templateArg == "" {
-						log.Fatal().Msg("Template is required")
+					if subject == "" {
+						log.Fatal().Msg("Subject is required")
 					}
-					if len(emailList) == 0 {
-						log.Fatal().Msg("Email list is required for blasting email minimum 1 email")
+					if plaintext == "" {
+						log.Fatal().Msg("Plaintext template is required")
 					}
-
-					htmlContent, err := os.ReadFile(templateArg)
+					if htmlBody == "" {
+						log.Fatal().Msg("Html template is required")
+					}
+					if mailCsv == "" {
+						log.Fatal().Msg("Mail csv is required")
+					}
+					plaintextContent, err := os.ReadFile(plaintext)
 					if err != nil {
-						log.Fatal().Err(err).Msg("Failed to read template")
+						log.Fatal().Err(err).Msg("Failed to read plaintext template")
+					}
+					htmlContent, err := os.ReadFile(htmlBody)
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to read html template")
+					}
+					emailList, err := os.ReadFile(mailCsv)
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to read email list")
+					}
+
+					type users struct {
+						Username string `json:"username"`
+						Email    string `json:"email"`
+					}
+					var userList []users
+					r := csv.NewReader(strings.NewReader(string(emailList)))
+					header, err := r.Read()
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to read csv header")
+						return err
+					}
+					for {
+						record, err := r.Read()
+						if errors.Is(err, io.EOF) {
+							break
+						}
+						m := make(map[string]string)
+						for i, h := range header {
+							m[h] = record[i]
+						}
+						if m["username"] == "" {
+							log.Fatal().Msg("Username is required")
+						}
+						if m["email"] == "" {
+							log.Fatal().Msg("Email is required")
+						}
+						userList = append(userList, users{
+							Username: m["username"],
+							Email:    m["email"],
+						})
 					}
 
 					mailSender := NewMailSender(&MailConfiguration{
-						SmtpHostname: config.SmtpHostname,
-						SmtpPort:     config.SmtpPort,
-						SmtpFrom:     config.SmtpFrom,
-						SmtpPassword: config.SmtpPassword,
+						SmtpHostname: smtpHostname,
+						SmtpPort:     smtpPort,
+						SmtpFrom:     smtpFrom,
+						SmtpPassword: smtpPassword,
 					})
-					for _, email := range emailList {
+					for _, user := range userList {
 						mail := &Mail{
-							RecipientName:  email,
-							RecipientEmail: email,
-							Subject:        "TeknumConf - Attendee Waitlist",
-							PlainTextBody: fmt.Sprintf(`Hello, %s!
-					Thank you for participating on TeknumConf, due to the limited seating quota, you are on a waitlist.
-					Not to worry, you will receive an email from us regarding the seating in about 7 days.
-					Please do contact us if you didn't receive any email by then.`, email),
-							HtmlBody: string(htmlContent),
+							RecipientName:  user.Username,
+							RecipientEmail: user.Email,
+							Subject:        subject,
+							PlainTextBody:  string(plaintextContent),
+							HtmlBody:       string(htmlContent),
 						}
 						err := mailSender.Send(mail)
 						if err != nil {
-							log.Error().Err(err).Msgf("Failed to send email to %s", email)
+							log.Error().Err(err).Msgf("Failed to send email to %s", user.Email)
 							continue
 						}
-						log.Info().Msgf("Sending email to %s", email)
+						log.Info().Msgf("Sending email to %s", user.Email)
 					}
-
 					log.Info().Msg("Blasting email done")
 					return nil
 				},

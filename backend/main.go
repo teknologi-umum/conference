@@ -3,15 +3,12 @@ package main
 import (
 	"context"
 	"database/sql"
-	"encoding/csv"
 	"errors"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"time"
 
 	"github.com/urfave/cli/v2"
@@ -279,37 +276,7 @@ func main() {
 						log.Fatal().Err(err).Msg("Failed to read email list")
 					}
 
-					type users struct {
-						Username string `json:"username"`
-						Email    string `json:"email"`
-					}
-					var userList []users
-					r := csv.NewReader(strings.NewReader(string(emailList)))
-					header, err := r.Read()
-					if err != nil {
-						log.Fatal().Err(err).Msg("Failed to read csv header")
-						return err
-					}
-					for {
-						record, err := r.Read()
-						if errors.Is(err, io.EOF) {
-							break
-						}
-						m := make(map[string]string)
-						for i, h := range header {
-							m[h] = record[i]
-						}
-						if m["username"] == "" {
-							log.Fatal().Msg("Username is required")
-						}
-						if m["email"] == "" {
-							log.Fatal().Msg("Email is required")
-						}
-						userList = append(userList, users{
-							Username: m["username"],
-							Email:    m["email"],
-						})
-					}
+					err, userList := csvReader(string(emailList))
 
 					mailSender := NewMailSender(&MailConfiguration{
 						SmtpHostname: smtpHostname,
@@ -319,7 +286,7 @@ func main() {
 					})
 					for _, user := range userList {
 						mail := &Mail{
-							RecipientName:  user.Username,
+							RecipientName:  user.Name,
 							RecipientEmail: user.Email,
 							Subject:        subject,
 							PlainTextBody:  string(plaintextContent),

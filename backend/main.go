@@ -192,27 +192,117 @@ func main() {
 				},
 			},
 			{
-				Name:      "blast-email",
-				Usage:     "blast-email [template] [file list destination of emails]",
-				ArgsUsage: "[template] [file list destination of emails]",
+				Name: "blast-email",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "smtp.hostname",
+						Value: "",
+						Usage: "SMTP hostname",
+					},
+					&cli.StringFlag{
+						Name:  "smtp.port",
+						Value: "",
+						Usage: "SMTP port",
+					},
+					&cli.StringFlag{
+						Name:  "smtp.from",
+						Value: "admin@localhost",
+						Usage: "SMTP sender email",
+					},
+					&cli.StringFlag{
+						Name:  "smtp.password",
+						Value: "",
+						Usage: "SMTP password",
+					},
+					&cli.StringFlag{
+						Name:     "subject",
+						Value:    "",
+						Usage:    "Email subject",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "plaintext-body",
+						Value:    "",
+						Usage:    "Path to plaintext body file",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "html-body",
+						Value:    "",
+						Usage:    "Path to HTML body file",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "recipients",
+						Value:    "",
+						Usage:    "Path to CSV file containing list of emails",
+						Required: true,
+					},
+				},
+				Usage:     "blast-email [subject] [template-plaintext] [template-html-body] [csv-file list destination of emails]",
+				ArgsUsage: "[subject] [template-plaintext] [template-html-body] [path-csv-file]",
 				Action: func(cCtx *cli.Context) error {
-					templateArg := cCtx.Args().Get(0)
-					emailList := cCtx.Args().Tail()
+					smtpHostname := cCtx.String("smtp.hostname")
+					smtpPort := cCtx.String("smtp.port")
+					smtpFrom := cCtx.String("smtp.from")
+					smtpPassword := cCtx.String("smtp.password")
+					subject := cCtx.String("subject")
+					plaintext := cCtx.String("plaintext-body")
+					htmlBody := cCtx.String("html-body")
+					mailCsv := cCtx.String("recipients")
 
-					if templateArg == "" {
-						log.Fatal().Msg("Template is required")
+					if subject == "" {
+						log.Fatal().Msg("Subject is required")
+					}
+					if plaintext == "" {
+						log.Fatal().Msg("Plaintext template is required")
+					}
+					if htmlBody == "" {
+						log.Fatal().Msg("Html template is required")
+					}
+					if mailCsv == "" {
+						log.Fatal().Msg("Mail csv is required")
+					}
+					plaintextContent, err := os.ReadFile(plaintext)
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to read plaintext template")
+					}
+					htmlContent, err := os.ReadFile(htmlBody)
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to read html template")
+					}
+					emailList, err := os.ReadFile(mailCsv)
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to read email list")
 					}
 
-					if len(emailList) == 0 {
-						log.Fatal().Msg("Email list is required for blasting email minimum 1 email")
+					userList, err := csvReader(string(emailList))
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to parse email list")
 					}
 
-					for _, email := range emailList {
-						log.Info().Msgf("Sending email to %s", email)
+					mailSender := NewMailSender(&MailConfiguration{
+						SmtpHostname: smtpHostname,
+						SmtpPort:     smtpPort,
+						SmtpFrom:     smtpFrom,
+						SmtpPassword: smtpPassword,
+					})
+					for _, user := range userList {
+						mail := &Mail{
+							RecipientName:  user.Name,
+							RecipientEmail: user.Email,
+							Subject:        subject,
+							PlainTextBody:  string(plaintextContent),
+							HtmlBody:       string(htmlContent),
+						}
+						err := mailSender.Send(mail)
+						if err != nil {
+							log.Error().Err(err).Msgf("Failed to send email to %s", user.Email)
+							continue
+						}
+						log.Info().Msgf("Sending email to %s", user.Email)
 					}
-
-					//TODO: send email to all attendees. Implement email your logic here
-					log.Info().Msg("Blasting email")
+					log.Info().Msg("Blasting email done")
 					return nil
 				},
 			},

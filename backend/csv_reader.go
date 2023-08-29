@@ -25,11 +25,11 @@ func csvReader(file string) (users []User, err error) {
 		}
 		if m["name"] == "" {
 			err = errors.New("name is required")
-			return
+			return nil, err
 		}
 		if m["email"] == "" {
 			err = errors.New("email is required")
-			return
+			return nil, err
 		}
 		users = append(users, User{
 			Name:  m["name"],

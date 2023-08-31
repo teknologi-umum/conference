@@ -24,8 +24,12 @@ export default defineNuxtConfig({
   css: ['assets/css/style.css'],
   modules: [
     '@unocss/nuxt',
-    '@nuxtjs/google-fonts'
+    '@nuxtjs/google-fonts',
+    "@model-w/sentry"
   ],
+  sentry: {
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.SENTRY_ENVIRONMENT
+  },
   devtools: { enabled: true },
-  
 })

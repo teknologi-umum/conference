@@ -6,7 +6,7 @@ const faq = [
     },
     {
         question: 'Do Teknologi Umum have Open Source projects?',
-        answer: `Yes! We have many of them. As well as scientific journal that's being made public and widespread for pushing mankind's knowledge, Teknologi Umum believes the same thing for software engineering and the like. You can find many of our public project and repositories at https://github.com/teknologi-umum`
+        answer: `Yes! We have many of them. As well as scientific journal that's being made public and widespread for pushing mankind's knowledge, Teknologi Umum believes the same thing for software engineering and the like. You can find many of our public project and repositories at <a target='_blank' href='https://github.com/teknologi-umum'>https://github.com/teknologi-umum</a>`
     },
     {
         question: 'What is TeknumConf?',
@@ -14,7 +14,7 @@ const faq = [
     },
     {
         question: 'When will TeknumConf be held?',
-        answer: `We will be in Jakarta on 21 October 2023, at the same time with Hacktoberfest.`
+        answer: `We will be in Jakarta on <span class='text-orange-300 font-bold'>21 October 2023</span>, at the same time with Hacktoberfest.`
     },
     {
         question: 'Will there be a live streaming or recorded videos?',
@@ -31,7 +31,7 @@ const faq = [
         <div class="accordion-item" v-for="(question, i) in faq">
             <input type="radio" name="radio" class="accordion-radio hidden" :id="`question-${i}`">
             <label :for="`question-${i}`" class="accordion-title cursor-pointer">{{ question.question }}</label>
-            <p class="accordion-content leading-7">{{ question.answer }}</p>
+            <p class="accordion-content leading-7" v-html="question.answer"></p>
         </div>
     </div>
 </template>

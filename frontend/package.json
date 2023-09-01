@@ -1,6 +1,11 @@
 {
   "name": "nuxt-app",
   "private": true,
+  "pnpm": {
+    "overrides": {
+      "node-fetch-native": "1.2.0"
+    }
+  },
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",

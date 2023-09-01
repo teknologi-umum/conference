@@ -23,13 +23,17 @@ func NewServer(config *ServerConfig) *echo.Echo {
 	// NOTE: Only need to handle CORS, everything else is being handled by the API gateway
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:     []string{"https://conf.teknologiumum.com"},
-		AllowMethods:     []string{"POST"},
+		AllowMethods:     []string{http.MethodPost},
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 		AllowCredentials: false,
 		MaxAge:           3600, // 1 day
 	}))
 
 	e.Use(middleware.RequestID())
+
+	e.GET("/ping", func(c echo.Context) error {
+		return c.NoContent(http.StatusOK)
+	})
 
 	e.POST("/users", func(c echo.Context) error {
 		requestId := c.Request().Header.Get(echo.HeaderXRequestID)

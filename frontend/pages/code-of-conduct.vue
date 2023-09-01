@@ -6,67 +6,53 @@ useHead({
 <template>
     <div id="page">
         <SinglePage title="Code of Conduct">
-            <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-                    labore et dolore magna aliqua. Vitae congue eu consequat ac felis donec et odio. Tempus quam
-                    pellentesque nec nam aliquam sem et tortor consequat. Purus non enim praesent elementum
-                    facilisis leo. Risus nullam eget felis eget nunc lobortis mattis aliquam. Sed viverra ipsum
-                    nunc aliquet bibendum. Proin fermentum leo vel orci. Arcu cursus euismod quis viverra.
-                    Eu scelerisque felis imperdiet proin fermentum leo. Orci nulla pellentesque dignissim enim.
-                    Elementum pulvinar etiam non quam lacus suspendisse faucibus interdum.
-                    Faucibus turpis in eu mi bibendum neque egestas. Ligula ullamcorper malesuada proin libero.
-                </p>
-
-                <p>
-                    Aliquam ultrices sagittis orci a scelerisque purus semper. Aliquam ut porttitor leo a diam
-                    sollicitudin. Molestie at elementum eu facilisis sed odio. Quis risus sed vulputate odio ut
-                    enim blandit volutpat maecenas. Nibh ipsum consequat nisl vel pretium lectus quam id leo. At
-                    risus viverra adipiscing at in tellus integer feugiat. Ultricies integer quis auctor elit sed
-                    vulputate mi sit. Mattis vulputate enim nulla aliquet porttitor lacus luctus accumsan.
-                    Sed elementum tempus egestas sed. Commodo odio aenean sed adipiscing diam donec adipiscing
-                    tristique. Enim nulla aliquet porttitor lacus luctus accumsan tortor. Nulla posuere sollicitudin
-                    aliquam ultrices sagittis orci a scelerisque purus. Nulla pharetra diam sit amet nisl suscipit
-                    adipiscing. Vel pretium lectus quam id leo in vitae turpis massa. Amet purus gravida quis blandit
-                    turpis cursus in. Lacinia quis vel eros donec ac odio.
-                </p>
-                <p>
-                    Odio eu feugiat pretium nibh ipsum consequat nisl vel pretium. Odio tempor orci dapibus
-                    ultrices in iaculis nunc sed. Vivamus at augue eget arcu. Lectus vestibulum mattis ullamcorper
-                    velit sed ullamcorper morbi tincidunt ornare. Faucibus vitae aliquet nec ullamcorper sit
-                    amet risus nullam eget. Vitae elementum curabitur vitae nunc sed velit dignissim sodales.
-                    Nunc non blandit massa enim nec dui nunc. Imperdiet sed euismod nisi porta lorem mollis
-                    aliquam. Convallis a cras semper auctor neque vitae tempus quam pellentesque. Libero enim
-                    sed faucibus turpis in eu mi bibendum. Tellus at urna condimentum mattis pellentesque id
-                    nibh tortor id. Suspendisse interdum consectetur libero id faucibus.
-                </p>
-
-                <p>
-                    Sit amet consectetur adipiscing elit ut aliquam purus sit. Parturient montes nascetur
-                    ridiculus mus mauris vitae ultricies leo. Sed euismod nisi porta lorem mollis aliquam
-                    ut porttitor. Dolor sit amet consectetur adipiscing elit duis tristique. Quam id leo in
-                    vitae turpis massa sed elementum tempus. Aliquet eget sit amet tellus cras adipiscing.
-                    Morbi tincidunt ornare massa eget egestas purus viverra. Ornare arcu odio ut sem. Turpis
-                    massa tincidunt dui ut ornare lectus sit. Dis parturient montes nascetur ridiculus mus
-                    mauris vitae ultricies. Lorem mollis aliquam ut porttitor. Ullamcorper eget nulla facilisi
-                    etiam dignissim diam quis. Et ligula ullamcorper malesuada proin libero. Dui faucibus in
-                    ornare quam. Dolor sit amet consectetur adipiscing elit duis tristique sollicitudin nibh.
-                    Nibh tellus molestie nunc non blandit massa enim nec dui. Arcu risus quis varius quam.
-                    Nunc lobortis mattis aliquam faucibus purus in massa tempor nec.
-                </p>
-                <p>
-                    Volutpat ac tincidunt vitae semper quis lectus. Nulla posuere sollicitudin aliquam ultrices.
-                    Sit amet nisl suscipit adipiscing bibendum est ultricies. Nunc non blandit massa enim nec.
-                    Malesuada proin libero nunc consequat interdum varius sit amet mattis. Consectetur adipiscing
-                    elit pellentesque habitant morbi tristique senectus. Velit aliquet sagittis id consectetur
-                    purus ut faucibus. Leo vel fringilla est ullamcorper. Commodo viverra maecenas accumsan lacus
-                    vel facilisis. Montes nascetur ridiculus mus mauris vitae ultricies leo. Libero volutpat
-                    sed cras ornare arcu dui. Arcu cursus euismod quis viverra nibh cras pulvinar mattis nunc.
-                    Leo urna molestie at elementum eu facilisis sed odio morbi. Faucibus pulvinar elementum
-                    integer enim neque volutpat ac tincidunt vitae. Lorem sed risus ultricies tristique nulla.
-                    Pulvinar pellentesque habitant morbi tristique senectus et netus et. Accumsan in nisl nisi
-                    scelerisque eu ultrices vitae. Euismod nisi porta lorem mollis. Urna cursus eget nunc
-                    scelerisque viverra mauris in. Nisl rhoncus mattis rhoncus urna neque viverra.
-                </p>
+          <h2>Our Pledge</h2>
+          <p class="m-0">We as members, contributors, and leaders pledge to make participation in our community a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, caste, color, religion, or sexual identity and orientation.</p>
+          <p class="m-0">We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.</p>
+          <h2>Our Standards</h2>
+          <p class="m-0">Examples of behavior that contributes to a positive environment for our community include:</p>
+          <ul>
+            <li>Demonstrating empathy and kindness toward other people</li>
+            <li>Being respectful of differing opinions, viewpoints, and experiences</li>
+            <li>Giving and gracefully accepting constructive feedback</li>
+            <li>Accepting responsibility and apologizing to those affected by our mistakes, and learning from the experience</li>
+            <li>Focusing on what is best not just for us as individuals, but for the overall community</li>
+          </ul>
+          <p class="m-0">Examples of unacceptable behavior include:</p>
+          <ul>
+            <li>The use of sexualized language or imagery, and sexual attention or advances of any kind</li>
+            <li>Trolling, insulting or derogatory comments, and personal or political attacks</li>
+            <li>Public or private harassment</li>
+            <li>Publishing others' private information, such as a physical or email address, without their explicit permission</li>
+            <li>Other conduct which could reasonably be considered inappropriate in a professional setting</li>
+          </ul>
+          <h2>Enforcement Responsibilities</h2>
+          <p class="m-0">Community leaders are responsible for clarifying and enforcing our standards of acceptable behavior and will take appropriate and fair corrective action in response to any behavior that they deem inappropriate, threatening, offensive, or harmful.</p>
+          <p class="m-0">Community leaders have the right and responsibility to remove, edit, or reject comments, commits, code, wiki edits, issues, and other contributions that are not aligned to this Code of Conduct, and will communicate reasons for moderation decisions when appropriate.</p>
+          <h2>Scope</h2>
+          <p class="m-0">This Code of Conduct applies within all community spaces, and also applies when an individual is officially representing the community in public spaces. Examples of representing our community include using an official e-mail address, posting via an official social media account, or acting as an appointed representative at an online or offline event.</p>
+          <h2>Enforcement</h2>
+          <p class="m-0">Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement at email to conduct@teknologiumum.com. All complaints will be reviewed and investigated promptly and fairly.</p>
+          <p class="m-0">All community leaders are obligated to respect the privacy and security of the reporter of any incident.</p>
+          <h2>Enforcement Guidelines</h2>
+          <p class="m-0">Community leaders will follow these Community Impact Guidelines in determining the consequences for any action they deem in violation of this Code of Conduct:</p>
+          <h3>1. Correction</h3>
+          <p class="m-0"><strong>Community Impact</strong>: Use of inappropriate language or other behavior deemed unprofessional or unwelcome in the community.</p>
+          <p class="m-0"><strong>Consequence</strong>: A private, written warning from community leaders, providing clarity around the nature of the violation and an explanation of why the behavior was inappropriate. A public apology may be requested.</p>
+          <h3>2. Warning</h3>
+          <p class="m-0"><strong>Community Impact</strong>: A violation through a single incident or series of actions.</p>
+          <p class="m-0"><strong>Consequence</strong>: A warning with consequences for continued behavior. No interaction with the people involved, including unsolicited interaction with those enforcing the Code of Conduct, for a specified period of time. This includes avoiding interactions in community spaces as well as external channels like social media. Violating these terms may lead to a temporary or permanent ban.</p>
+          <h3>3. Temporary Ban</h3>
+          <p class="m-0"><strong>Community Impact</strong>: A serious violation of community standards, including sustained inappropriate behavior.</p>
+          <p class="m-0"><strong>Consequence</strong>: A temporary ban from any sort of interaction or public communication with the community for a specified period of time. No public or private interaction with the people involved, including unsolicited interaction with those enforcing the Code of Conduct, is allowed during this period. Violating these terms may lead to a permanent ban.</p>
+          <h3>4. Permanent Ban</h3>
+          <p class="m-0"><strong>Community Impact</strong>: Demonstrating a pattern of violation of community standards, including sustained inappropriate behavior, harassment of an individual, or aggression toward or disparagement of classes of individuals.</p>
+          <p class="m-0"><strong>Consequence</strong>: A permanent ban from any sort of public interaction within the community.</p>
+          <h2>Attribution</h2>
+          <p class="m-0">This Code of Conduct is adapted from the <a href="https://www.contributor-covenant.org/">Contributor Covenant</a>, version 2.1, available at <a href="https://www.contributor-covenant.org/version/2/1/code_of_conduct.html">https://www.contributor-covenant.org/version/2/1/code_of_conduct.html</a>.</p>
+          <p class="m-0">Community Impact Guidelines were inspired by <a href="https://github.com/mozilla/diversity">Mozilla's code of conduct enforcement ladder</a>.</p>
+          <p class="m-0">For answers to common questions about this code of conduct, see the FAQ at https://www.contributor-covenant.org/faq. Translations are available at https://www.contributor-covenant.org/translations.</p>
+        
         </SinglePage>
     </div>
 </template>

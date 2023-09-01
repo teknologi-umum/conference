@@ -40,7 +40,7 @@ const submit = async () => {
 <template>
     <div id="page">
         <SinglePage title="Save your spot!">
-            <p class="desc">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Consectetur illo dicta, dolor commodi voluptates sit. </p>
+            <p class="desc">We only have a limit for 50 participants. Reserve yours now. </p>
             <div :class="`alert alert-${alert.type} mb-5`" v-if="alert.type !== ''">{{ alert.msg }}</div>
             <form @submit.prevent="submit" action="" class="max-w-[500px] mb-24">
                 <div class="form-group mb-5">
@@ -58,7 +58,7 @@ const submit = async () => {
             <p class="mb-5!">TeknumConf team will not contact you and ask for payment from any other medium than email. You can validate it by:</p>
             <ul class="mb-5 pl-5">
                 <li>
-                    Make sure the email is from conference@teknologiumum.com
+                    Make sure the email is from conference@teknologiumum.com. To make it not to be on your spam folder, you can add it to your mail contact first.
                 </li>
                 <li>
                     Scan the QR code on the bottom of the email, you should be directed to https://conf.teknologiumum.com

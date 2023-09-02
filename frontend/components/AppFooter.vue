@@ -12,10 +12,10 @@
                             <router-link class="white" to="code-of-conduct">Code of Conduct</router-link>
                         </li>
                         <li>
-                            <router-link class="white" to="code-of-conduct">Cookie Policy</router-link>
+                            <router-link class="white" to="cookie-policy">Cookie Policy</router-link>
                         </li>
                         <li>
-                            <router-link class="white" to="code-of-conduct">Privacy Policy</router-link>
+                            <router-link class="white" to="privacy-policy">Privacy Policy</router-link>
                         </li>
                     </ul>
                 </div>

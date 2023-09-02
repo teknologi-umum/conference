@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 useHead({
-    title: "Code of Conduct"
+    title: "Code of Conduct | TeknumConf 2023"
 })
 </script>
 <template>

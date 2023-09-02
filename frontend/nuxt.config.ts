@@ -9,7 +9,7 @@ export default defineNuxtConfig({
       eventSchedule: true,
       aggressiveIntroduction: true,
       fifaChampionship: true,
-      backendBaseUrl: process.env.NODE_ENV === "development" ? "http://localhost:8080" : "https://conf.teknologiumum.com/api/"
+      backendBaseUrl: process.env.NODE_ENV === "development" ? "http://localhost:8080" : "https://conf.teknologiumum.com/api"
     }
   },
   googleFonts: {

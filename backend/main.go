@@ -236,7 +236,12 @@ func main() {
 						Name:     "recipients",
 						Value:    "",
 						Usage:    "Path to CSV file containing list of emails",
-						Required: true,
+						Required: false,
+					},
+					&cli.StringFlag{
+						Name:     "single-recipient",
+						Value:    "",
+						Required: false,
 					},
 				},
 				Usage:     "blast-email [subject] [template-plaintext] [template-html-body] [csv-file list destination of emails]",
@@ -250,6 +255,7 @@ func main() {
 					plaintext := cCtx.String("plaintext-body")
 					htmlBody := cCtx.String("html-body")
 					mailCsv := cCtx.String("recipients")
+					singleRecipient := cCtx.String("single-recipient")
 
 					if subject == "" {
 						log.Fatal().Msg("Subject is required")
@@ -260,9 +266,10 @@ func main() {
 					if htmlBody == "" {
 						log.Fatal().Msg("Html template is required")
 					}
-					if mailCsv == "" {
-						log.Fatal().Msg("Mail csv is required")
+					if mailCsv == "" && singleRecipient == "" {
+						log.Fatal().Msg("Recipient is required")
 					}
+
 					plaintextContent, err := os.ReadFile(plaintext)
 					if err != nil {
 						log.Fatal().Err(err).Msg("Failed to read plaintext template")
@@ -271,14 +278,22 @@ func main() {
 					if err != nil {
 						log.Fatal().Err(err).Msg("Failed to read html template")
 					}
-					emailList, err := os.ReadFile(mailCsv)
-					if err != nil {
-						log.Fatal().Err(err).Msg("Failed to read email list")
-					}
 
-					userList, err := csvReader(string(emailList))
-					if err != nil {
-						log.Fatal().Err(err).Msg("Failed to parse email list")
+					var userList []User
+
+					if mailCsv != "" {
+						emailList, err := os.ReadFile(mailCsv)
+						if err != nil {
+							log.Fatal().Err(err).Msg("Failed to read email list")
+						}
+						userList, err = csvReader(string(emailList))
+						if err != nil {
+							log.Fatal().Err(err).Msg("Failed to parse email list")
+						}
+					} else {
+						userList = append(userList, User{
+							Email: singleRecipient,
+						})
 					}
 
 					mailSender := NewMailSender(&MailConfiguration{

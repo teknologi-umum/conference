@@ -2,13 +2,10 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"net"
 	"net/smtp"
 	"strconv"
 	"time"
-
-	"github.com/rs/zerolog/log"
 )
 
 type MailConfiguration struct {
@@ -38,14 +35,14 @@ func NewMailSender(configuration *MailConfiguration) *Mailer {
 	return mailer
 }
 
-func (m *Mailer) messageBuilder(mail *Mail) string {
+func (m *Mailer) messageBuilder(mail *Mail) []byte {
 	// Refer to https://www.rfc-editor.org/rfc/rfc5322
 	var msg bytes.Buffer
 	msg.WriteString("MIME-version: 1.0\n")
 	msg.WriteString("Date: ")
 	msg.WriteString(time.Now().Format(time.RFC1123Z))
 	msg.WriteString("\n")
-	msg.WriteString("From: \"Teknologi Umum Conference\" <" + m.configuration.SmtpFrom + ">\n")
+	msg.WriteString("From: \"Teknologi Umum Conference\" <conference@teknologiumum.com>\n")
 	msg.WriteString("To: " + strconv.Quote(mail.RecipientName) + " <" + mail.RecipientEmail + ">\n")
 	msg.WriteString("Subject: " + mail.Subject + "\n")
 	msg.WriteString("Content-Type: multipart/mixed; boundary=\"mixed_boundary\"\n\n")
@@ -67,57 +64,15 @@ func (m *Mailer) messageBuilder(mail *Mail) string {
 	msg.WriteString("\n")
 	msg.WriteString("--alternative_boundary--\n")
 
-	return msg.String()
+	return msg.Bytes()
 }
 
 func (m *Mailer) Send(mail *Mail) error {
-	client, err := smtp.Dial(net.JoinHostPort(m.configuration.SmtpHostname, m.configuration.SmtpPort))
-	if err != nil {
-		return fmt.Errorf("dialing: %w", err)
-	}
-	defer func(client *smtp.Client) {
-		err := client.Close()
-		if err != nil {
-			log.Error().Err(err).Msg("Closing smtp client connection")
-		}
-	}(client)
-
-	err = client.Mail(m.configuration.SmtpFrom)
-	if err != nil {
-		return fmt.Errorf("sending mail from: %w", err)
-	}
-
-	// If password is not empty, we'll try and use authentication
-	if m.configuration.SmtpPassword != "" {
-		err := client.Auth(smtp.CRAMMD5Auth(m.configuration.SmtpFrom, m.configuration.SmtpPassword))
-		if err != nil {
-			// If CRAM-MD5 fails, we'll try plain auth
-			e := client.Auth(smtp.PlainAuth("", m.configuration.SmtpFrom, m.configuration.SmtpPassword, m.configuration.SmtpHostname))
-			if e != nil {
-				return fmt.Errorf("authenticating: %w", e)
-			}
-		}
-	}
-
-	err = client.Rcpt(mail.RecipientEmail)
-	if err != nil {
-		return fmt.Errorf("sending mail to: %w", err)
-	}
-
-	wc, err := client.Data()
-	if err != nil {
-		return fmt.Errorf("sending data: %w", err)
-	}
-
-	_, err = fmt.Fprint(wc, m.messageBuilder(mail))
-	if err != nil {
-		return fmt.Errorf("sending data: %w", err)
-	}
-
-	err = wc.Close()
-	if err != nil {
-		return fmt.Errorf("closing connection: %w", err)
-	}
-
-	return nil
+	return smtp.SendMail(
+		net.JoinHostPort(m.configuration.SmtpHostname, m.configuration.SmtpPort),
+		smtp.PlainAuth("", m.configuration.SmtpFrom, m.configuration.SmtpPassword, m.configuration.SmtpHostname),
+		"conference@teknologiumum.com",
+		[]string{mail.RecipientEmail},
+		m.messageBuilder(mail),
+	)
 }

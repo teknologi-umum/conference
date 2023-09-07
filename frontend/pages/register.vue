@@ -16,7 +16,7 @@ const submit = async () => {
         }
     });
     alert.type = 'success'
-    alert.msg = "Registration success. Invitation sent to your email."
+    alert.msg = "Registration success. You will receive an invitation via email within 7 business days."
     if (response.error.value != null) {
         // TODO: handle on registration response error
         alert.type = 'danger'

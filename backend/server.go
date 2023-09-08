@@ -36,7 +36,7 @@ func NewServer(config *ServerConfig) *echo.Echo {
 	})
 
 	e.POST("/users", func(c echo.Context) error {
-		requestId := c.Request().Header.Get(echo.HeaderXRequestID)
+		requestId := c.Response().Header().Get(echo.HeaderXRequestID)
 		sentryHub := sentryecho.GetHubFromContext(c)
 		sentryHub.Scope().SetTag("request-id", requestId)
 

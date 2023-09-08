@@ -66,7 +66,7 @@ jobs:
     name: Frontend
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    container: node:20-bookworm
+    container: node:20.5.1-bookworm
     defaults:
       run:
         working-directory: ./frontend

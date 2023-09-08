@@ -1,23 +1,19 @@
 Hello, {{ name }}, Teknum Conference is Heereeeeeeeeee! 🎉 🚀
         
-            Sudah siap mendapatkan materi persentasi yang penuh makna dan manfaat? Sudah siap berkenalan dengan
-            engineer-engineer jago? Atau, sudah ga sabar main FIFA?
+Sudah siap mendapatkan materi persentasi yang penuh makna dan manfaat? Sudah siap berkenalan dengan engineer-engineer jago? Atau, sudah ga sabar main FIFA?
         
-        Catet tanggal dan tempatnya!
-        
-            Tanggal & Waktu: 21 Oktober 2023, 13:00 - 19:00
-            
-            Tempat: Depok Town Square (Dekat stasiun KRL Pondok Cina)
-        
-        
-            Teknum Conference akan berisi Technical Workshop, Non Technical Workshop, dan Talkshow LANGSUNG TANPA
-            SENSOR... eh sama satu lagi, bakal ada pertandingan FIFA juga, lho!
-        
-        
-            Speaker Teknum Conference adalah praktisi pemrogram yang sudah berkarir di industri dalam waktu cukup lama
-            dan akan membawakan topik menarik!
-        
-        Sekedar mengingatkan, tiket terbatas! Siapa cepat, dia dapat!
-        
-            Amankan tiket mu sekarang di
-            Conf Teknologi Umum!
+Catet tanggal dan tempatnya!
+
+Tanggal & Waktu: 21 Oktober 2023, 13:00 - 19:00
+
+Tempat: Depok Town Square (Dekat stasiun KRL Pondok Cina)
+
+
+Teknum Conference akan berisi Technical Workshop, Non-Technical Workshop, dan Talkshow LANGSUNG TANPA SENSOR... eh sama satu lagi, bakal ada pertandingan FIFA juga, lho!
+
+
+Speaker Teknum Conference adalah praktisi pemrogram yang sudah berkarir di industri dalam waktu cukup lama dan akan membawakan topik menarik!
+
+Sekedar mengingatkan, tiket terbatas! Siapa cepat, dia dapat!
+
+Amankan tiket mu sekarang di Conf Teknologi Umum!

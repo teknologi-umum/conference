@@ -18,7 +18,7 @@ func TestMailSender(t *testing.T) {
 	}
 	smtpFrom, ok := os.LookupEnv("SMTP_FROM")
 	if !ok {
-		smtpFrom = "testing@localhost.domain"
+		smtpFrom = ""
 	}
 	smtpPassword, ok := os.LookupEnv("SMTP_PASSWORD")
 	if !ok {

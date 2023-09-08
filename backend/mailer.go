@@ -68,6 +68,16 @@ func (m *Mailer) messageBuilder(mail *Mail) []byte {
 }
 
 func (m *Mailer) Send(mail *Mail) error {
+	if m.configuration.SmtpFrom == "" || m.configuration.SmtpPassword == "" {
+		return smtp.SendMail(
+			net.JoinHostPort(m.configuration.SmtpHostname, m.configuration.SmtpPort),
+			nil, // no auth
+			"conference@teknologiumum.com",
+			[]string{mail.RecipientEmail},
+			m.messageBuilder(mail),
+		)
+	}
+
 	return smtp.SendMail(
 		net.JoinHostPort(m.configuration.SmtpHostname, m.configuration.SmtpPort),
 		smtp.PlainAuth("", m.configuration.SmtpFrom, m.configuration.SmtpPassword, m.configuration.SmtpHostname),

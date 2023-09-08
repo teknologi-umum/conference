@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/flowchartsman/handlebars/v3"
 	"github.com/urfave/cli/v2"
 
 	"github.com/rs/zerolog/log"
@@ -274,9 +275,20 @@ func main() {
 					if err != nil {
 						log.Fatal().Err(err).Msg("Failed to read plaintext template")
 					}
+
+					plaintextTemplate, err := handlebars.Parse(string(plaintextContent))
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to parse plaintext template")
+					}
+
 					htmlContent, err := os.ReadFile(htmlBody)
 					if err != nil {
 						log.Fatal().Err(err).Msg("Failed to read html template")
+					}
+
+					htmlTemplate, err := handlebars.Parse(string(htmlContent))
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to parse html template")
 					}
 
 					var userList []User
@@ -286,6 +298,7 @@ func main() {
 						if err != nil {
 							log.Fatal().Err(err).Msg("Failed to read email list")
 						}
+
 						userList, err = csvReader(string(emailList))
 						if err != nil {
 							log.Fatal().Err(err).Msg("Failed to parse email list")
@@ -302,6 +315,7 @@ func main() {
 						SmtpFrom:     smtpFrom,
 						SmtpPassword: smtpPassword,
 					})
+
 					for _, user := range userList {
 						mail := &Mail{
 							RecipientName:  user.Name,
@@ -310,11 +324,19 @@ func main() {
 							PlainTextBody:  string(plaintextContent),
 							HtmlBody:       string(htmlContent),
 						}
+
+						// Execute handlebars template only if user.Name is not empty
+						if user.Name != "" {
+							mail.PlainTextBody = plaintextTemplate.MustExec(map[string]any{"name": user.Name})
+							mail.HtmlBody = htmlTemplate.MustExec(map[string]any{"name": user.Name})
+						}
+
 						err := mailSender.Send(mail)
 						if err != nil {
 							log.Error().Err(err).Msgf("Failed to send email to %s", user.Email)
 							continue
 						}
+
 						log.Info().Msgf("Sending email to %s", user.Email)
 					}
 					log.Info().Msg("Blasting email done")

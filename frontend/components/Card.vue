@@ -9,8 +9,8 @@ defineProps({
 </script>
 <template>
     <div class="card rounded-2xl bg-white bg-opacity-10 backdrop-blur-lg	">
-        <div class="card-image">
-            <img :src="image_url" :alt="`Photo of ${title}`" class="w-full h-80 object-cover rounded-t-2xl">
+        <div class="card-image h-80 ">
+            <img :src="image_url" :alt="`Photo of ${title}`" class="w-full h-80 object-cover rounded-t-2xl mb-0">
         </div>
         <div class="card-body  rounded-b-2xl p-5">
             <h3 class="mb-4 text-3xl text-white">{{ title }}</h3>

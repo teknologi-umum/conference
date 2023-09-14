@@ -1,8 +1,32 @@
 <script setup>
+import personImage from "@/assets/images/person.jpg"
 const config = useRuntimeConfig()
 useHead({
     title: "Home"
 })
+
+const speakers = ref([
+    {
+        name: "Didiet Noor",
+        title: "Tanda-Tanda Kamu Punya Skill Issue",
+        description: "Developer bisa coding doang itu banyak. Banyak juga yang dilayoff. Saingan kamu banyak kalo cuma bisa coding.",
+    },
+    {
+        name: "M. Gilang Januar",
+        title: "The Business Mind in a Pragmatic Engineer: Building Boring Businesses",
+        description: "belom ada",
+    },
+    {
+        name: "Riza Ramadan",
+        title: "Melakukan TDD meski situasi tidak kondusif",
+        description: "Often, 'You're doing TDD wrong' is heard, but usually, TDD is just applied to unsuitable problems. Many do it right, just not for the right reasons. In this talk, we will discuss when it makes sense to use TDD and when it doesn't, regardless of our understanding of how to do TDD."
+    },
+    {
+        name: "Mustafa Zaki A.",
+        title: "Loving Rust not because of the performance",
+        description: "Rust dikenal dengan bahasa pemrograman yang cepat. Namun sebenarnya ada sisi lain yang ditawarkan di Rust. Talk kali ini akan membahas apa saja hal yang ditawarkan oleh Rust selain kecepatan.",
+    }
+]) 
 </script>
 <template>
     <div class="page">
@@ -40,6 +64,16 @@ useHead({
                         <li>Hangout and network yourself with others</li>
                         <li v-if="config.public.fifaChampionship">Local FIFA championship, just to have some fun!</li>
                     </ul>
+                </div>
+            </div>
+        </section>
+        <section id="speakers" class="section my-32">
+            <div class="container | mx-auto px-5">
+                <h2 class="section-title | mb-24 text-center w-full leading-tight">Speakers</h2>
+                <div class="section-body">
+                    <div class="speakers | grid grid-cols-1 lg:grid-cols-4 gap-10">
+                        <Card v-for="speaker in speakers" :key="speaker.name" :image_url="personImage" :title="speaker.name" :description="speaker.description"></Card>
+                    </div>
                 </div>
             </div>
         </section>

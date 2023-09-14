@@ -18,12 +18,24 @@ type TicketDomain struct {
 	mailer     *Mailer
 }
 
-func NewTicketDomain(db *pgxpool.Pool) (*TicketDomain, error) {
-	return &TicketDomain{
-		db:         nil, // TODO: fill these
-		privateKey: nil,
-		publicKey:  nil,
-	}, nil
+func NewTicketDomain(db *pgxpool.Pool, privateKey *ed25519.PrivateKey, publicKey *ed25519.PublicKey, mailer *Mailer) *TicketDomain {
+	if db == nil {
+		panic("db is nil")
+	}
+
+	if privateKey == nil {
+		panic("privateKey is nil")
+	}
+
+	if publicKey == nil {
+		panic("publicKey is nil")
+	}
+
+	if mailer == nil {
+		panic("mailer is nil")
+	}
+
+	return &TicketDomain{db: db, privateKey: privateKey, publicKey: publicKey, mailer: mailer}
 }
 
 // StorePaymentReceipt stores the photo and email combination into our datastore.

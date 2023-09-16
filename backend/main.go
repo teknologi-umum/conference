@@ -14,11 +14,12 @@ import (
 	"github.com/flowchartsman/handlebars/v3"
 	"github.com/urfave/cli/v2"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/getsentry/sentry-go"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/rs/zerolog/log"
+	_ "gocloud.dev/blob/fileblob"
+	_ "gocloud.dev/blob/s3blob"
 )
 
 func main() {

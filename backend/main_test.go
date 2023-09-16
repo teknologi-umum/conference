@@ -23,9 +23,15 @@ func TestMain(m *testing.M) {
 		databaseUrl = "postgres://postgres:password@localhost:5432/conf?sslmode=disable"
 	}
 
+	tempDir, err := os.MkdirTemp(os.TempDir(), "teknologi-umum-conference")
+	if err != nil {
+		log.Fatalf("creating temporary directory: %s", err.Error())
+		return
+	}
+
 	blobUrl, ok := os.LookupEnv("BLOB_URL")
 	if !ok {
-		blobUrl = "file:///tmp/teknologi-umum-conference"
+		blobUrl = "file://" + tempDir
 	}
 
 	smtpHostname, ok := os.LookupEnv("SMTP_HOSTNAME")
@@ -45,7 +51,6 @@ func TestMain(m *testing.M) {
 		smtpPassword = ""
 	}
 
-	var err error = nil
 	database, err = pgxpool.New(context.Background(), databaseUrl)
 	if err != nil {
 		log.Fatalf("creating pgx pool instance: %s", err.Error())
@@ -66,6 +71,7 @@ func TestMain(m *testing.M) {
 
 	exitCode := m.Run()
 
+	os.RemoveAll(tempDir)
 	bucket.Close()
 	database.Close()
 

@@ -54,10 +54,7 @@ jobs:
         run: go test -v -coverprofile=coverage.out -covermode=atomic ./...
         env:
           TZ: UTC
-          DB_HOST: db
-          DB_USER: postgres
-          DB_PASSWORD: password
-          DB_NAME: conf
+          DATABASE_URL: postgres://postgres:password@db:5432/conf?sslmode=disable
           SMTP_HOSTNAME: smtp
 
       - uses: codecov/codecov-action@v3

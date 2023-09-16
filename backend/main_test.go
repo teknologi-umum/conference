@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"gocloud.dev/blob"
+	_ "gocloud.dev/blob/fileblob"
 
 	main "conf"
 )
@@ -24,7 +25,7 @@ func TestMain(m *testing.M) {
 
 	blobUrl, ok := os.LookupEnv("BLOB_URL")
 	if !ok {
-		blobUrl = "filesystem:///tmp/teknologi-umum-conference"
+		blobUrl = "file:///tmp/teknologi-umum-conference"
 	}
 
 	smtpHostname, ok := os.LookupEnv("SMTP_HOSTNAME")

@@ -56,6 +56,10 @@ jobs:
           TZ: UTC
           DATABASE_URL: postgres://postgres:password@db:5432/conf?sslmode=disable
           SMTP_HOSTNAME: smtp
+          DB_HOST: postgres
+          DB_USER: postgres
+          DB_PASSWORD: password
+          DB_NAME: conf
 
       - uses: codecov/codecov-action@v3
 

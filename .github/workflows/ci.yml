@@ -56,7 +56,7 @@ jobs:
           TZ: UTC
           DATABASE_URL: postgres://postgres:password@db:5432/conf?sslmode=disable
           SMTP_HOSTNAME: smtp
-          DB_HOST: postgres
+          DB_HOST: db
           DB_USER: postgres
           DB_PASSWORD: password
           DB_NAME: conf

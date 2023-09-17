@@ -72,6 +72,10 @@ func (t *TicketDomain) StorePaymentReceipt(ctx context.Context, email string, ph
 		validationError.Errors = append(validationError.Errors, "photo is nil")
 	}
 
+	if contentType == "" {
+		validationError.Errors = append(validationError.Errors, "contentType is empty")
+	}
+
 	if len(validationError.Errors) > 0 {
 		return validationError
 	}

@@ -14,7 +14,7 @@ const faq = [
     },
     {
         question: 'When will TeknumConf be held?',
-        answer: `We will be in Jakarta on <span class='text-orange-300 font-bold'>21 October 2023</span>, at the same time with Hacktoberfest.`
+        answer: `We will be in Depok on <span class='text-orange-300 font-bold'>21 October 2023</span>, at the same time with Hacktoberfest.`
     },
     {
         question: 'Will there be a live streaming or recorded videos?',

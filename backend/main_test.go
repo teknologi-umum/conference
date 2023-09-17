@@ -77,6 +77,12 @@ func TestMain(m *testing.M) {
 
 	exitCode := m.Run()
 
+	// Migrate database
+	if err := main.App().Run([]string{"migrate", "down"}); err != nil {
+		log.Fatalf("migrating database: %s", err.Error())
+		return
+	}
+
 	os.RemoveAll(tempDir)
 	bucket.Close()
 	database.Close()

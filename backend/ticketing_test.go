@@ -98,15 +98,15 @@ func TestTicketDomain_StorePaymentReceipt(t *testing.T) {
 	}
 
 	t.Run("Invalid Email and photo", func(t *testing.T) {
-		err := ticketDomain.StorePaymentReceipt(context.Background(), "", nil)
+		err := ticketDomain.StorePaymentReceipt(context.Background(), "", nil, "")
 		if err == nil {
 			t.Error("expecting an error, got nil instead")
 		}
 
 		var validationError *main.ValidationError
 		if errors.As(err, &validationError) {
-			if len(validationError.Errors) != 2 {
-				t.Errorf("expecting two errors, got %d", len(validationError.Errors))
+			if len(validationError.Errors) != 3 {
+				t.Errorf("expecting three errors, got %d", len(validationError.Errors))
 			}
 		}
 	})
@@ -115,7 +115,7 @@ func TestTicketDomain_StorePaymentReceipt(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
 
-		err := ticketDomain.StorePaymentReceipt(ctx, "johndoe+happy@example.com", strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."))
+		err := ticketDomain.StorePaymentReceipt(ctx, "johndoe+happy@example.com", strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."), "text/plain")
 		if err != nil {
 			t.Errorf("unexpected error: %s", err.Error())
 		}
@@ -166,7 +166,7 @@ func TestTicketDomain_ValidatePaymentReceipt(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 		defer cancel()
 
-		err := ticketDomain.StorePaymentReceipt(ctx, "annedoe+happy@example.com", strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."))
+		err := ticketDomain.StorePaymentReceipt(ctx, "annedoe+happy@example.com", strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."), "text/plain")
 		if err != nil {
 			t.Errorf("unexpected error: %s", err.Error())
 		}

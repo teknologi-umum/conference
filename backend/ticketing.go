@@ -62,7 +62,7 @@ func NewTicketDomain(db *pgxpool.Pool, bucket *blob.Bucket, privateKey *ed25519.
 
 // StorePaymentReceipt stores the photo and email combination into our datastore.
 // This will be reviewed manually by the TeknumConf team.
-func (t *TicketDomain) StorePaymentReceipt(ctx context.Context, email string, photo io.Reader) error {
+func (t *TicketDomain) StorePaymentReceipt(ctx context.Context, email string, photo io.Reader, contentType string) error {
 	var validationError ValidationError
 	if email == "" {
 		validationError.Errors = append(validationError.Errors, "email is empty")
@@ -79,6 +79,7 @@ func (t *TicketDomain) StorePaymentReceipt(ctx context.Context, email string, ph
 	// Store photo to filesystem (please use this one https://pkg.go.dev/gocloud.dev@v0.34.0/blob)
 	blobKey := fmt.Sprintf("%s_%s", time.Now().Format(time.RFC3339), email)
 	err := t.bucket.Upload(ctx, blobKey, photo, &blob.WriterOptions{
+		ContentType: contentType,
 		Metadata: map[string]string{
 			"email": email,
 		},

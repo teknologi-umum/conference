@@ -69,6 +69,12 @@ func TestMain(m *testing.M) {
 		SmtpPassword: smtpPassword,
 	})
 
+	// Migrate database
+	if err := main.App().Run([]string{"migrate", "up"}); err != nil {
+		log.Fatalf("migrating database: %s", err.Error())
+		return
+	}
+
 	exitCode := m.Run()
 
 	os.RemoveAll(tempDir)

@@ -70,7 +70,7 @@ func TestMain(m *testing.M) {
 	})
 
 	// Migrate database
-	if err := main.App().Run([]string{"migrate", "up"}); err != nil {
+	if err := main.App().Run([]string{"teknum-conf", "migrate", "up"}); err != nil {
 		log.Fatalf("migrating database: %s", err.Error())
 		return
 	}
@@ -78,7 +78,7 @@ func TestMain(m *testing.M) {
 	exitCode := m.Run()
 
 	// Migrate database
-	if err := main.App().Run([]string{"migrate", "down"}); err != nil {
+	if err := main.App().Run([]string{"teknum-conf", "migrate", "down"}); err != nil {
 		log.Fatalf("migrating database: %s", err.Error())
 		return
 	}

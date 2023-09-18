@@ -70,7 +70,7 @@ func App() *cli.App {
 					userDomain := NewUserDomain(conn)
 
 					e := NewServer(&ServerConfig{
-						userDomain: userDomain,
+						UserDomain: userDomain,
 					})
 
 					exitSig := make(chan os.Signal, 1)

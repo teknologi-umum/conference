@@ -78,6 +78,16 @@ const speakers = ref([
             </div>
         </section>
         <section id="faq" class="section">
+            <div class="container | mx-auto px-5 lg:flex">
+                <div class="section-header text-center mb-16 lg:w-1/2 flex items-center justify-center">
+                    <h2 class="section-title">Rundown</h2>
+                </div>
+                <div class="section-content flex justify-center">
+                    <Rundown></Rundown>
+                </div>
+            </div>
+        </section>
+        <section id="faq" class="section">
             <div class="container | mx-auto px-5">
                 <div class="section-header text-center mb-16">
                     <h2 class="section-title">Frequently Asked Questions</h2>

@@ -60,9 +60,6 @@ const submit = async () => {
                 <li>
                     Make sure the email is from conference@teknologiumum.com. To make it not to be on your spam folder, you can add it to your mail contact first.
                 </li>
-                <li>
-                    Scan the QR code on the bottom of the email, you should be directed to https://conf.teknologiumum.com
-                </li>
             </ul>
             <p>If you don't receive any email within 5 days, please contact <a href="mailto:opensource@teknologiumum.com">opensource@teknologiumum.com</a>.</p>
         </SinglePage>

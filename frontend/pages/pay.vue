@@ -61,7 +61,7 @@ function onFileChange(e: Event) {
                     <label for="email-address">Email address</label>
                     <input type="email" id='email-address' class="form-control-lg" placeholder="juned@company.com" v-model="email">
                 </div>
-                <Btn size="lg">Save my spot</Btn>
+                <Btn size="lg">Upload proof</Btn>
             </form>
 
             <h2 class="mb-5">Important Notice:</h2>
@@ -70,11 +70,8 @@ function onFileChange(e: Event) {
                 <li>
                     Make sure the email is from conference@teknologiumum.com. To make it not to be on your spam folder, you can add it to your mail contact first.
                 </li>
-                <li>
-                    Scan the QR code on the bottom of the email, you should be directed to https://conf.teknologiumum.com
-                </li>
             </ul>
-            <p>If you don't receive any email within 5 days, please contact <a href="mailto:opensource@teknologiumum.com">opensource@teknologiumum.com</a>.</p>
+            <p>If you don't receive any email within 7 days, please contact <a href="mailto:opensource@teknologiumum.com">opensource@teknologiumum.com</a>.</p>
         </SinglePage>
     </div>
 </template>

@@ -345,14 +345,9 @@ func main() {
 			},
 			{
 				Name:      "participants",
-				Usage:     "participants [type] [is_processed]",
-				ArgsUsage: "[type] [is_processed]",
+				Usage:     "participants [is_processed]",
+				ArgsUsage: "[is_processed]",
 				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "type",
-						Value: "",
-						Usage: "Type of user",
-					},
 					&cli.BoolFlag{
 						Name:  "is_processed",
 						Value: false,
@@ -360,20 +355,7 @@ func main() {
 					},
 				},
 				Action: func(cCtx *cli.Context) error {
-					var typeC Type
-					typeStr := cCtx.String("type")
 					isProcessedStr := cCtx.Bool("is_processed")
-
-					if typeStr == "" {
-						log.Fatal().Msg("Type is required")
-					}
-
-					if typeStr == "participant" {
-						typeC = TypeParticipant
-					}
-					if typeStr == "speaker" {
-						typeC = TypeSpeaker
-					}
 
 					conn, err := pgxpool.New(
 						context.Background(),
@@ -392,7 +374,7 @@ func main() {
 					defer conn.Close()
 
 					UserDomain := NewUserDomain(conn)
-					users, err := UserDomain.GetUsers(cCtx.Context, UserFilterRequest{Type: typeC, IsProcessed: isProcessedStr})
+					users, err := UserDomain.GetUsers(cCtx.Context, UserFilterRequest{Type: TypeParticipant, IsProcessed: isProcessedStr})
 					if err != nil {
 						return err
 					}

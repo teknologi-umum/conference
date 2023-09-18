@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/ed25519"
 	"crypto/sha256"
@@ -297,10 +298,93 @@ harap abaikan email ini. Terima kasih!`,
 // the signature and mark the ticket as used. Each ticket can only be used once.
 //
 // If the signature is invalid or the ticket is used, it will return ErrInvalidTicket error.
-func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (ok bool, err error) {
+func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (ok bool, student bool, err error) {
+	if len(payload) == 0 {
+		return false, false, ValidationError{Errors: []string{"payload is empty"}}
+	}
+
 	// Separate the payload into the signature + email + random id that's generated from ValidatePaymentReceipt
+	rawSignature, payloadAfter, found := bytes.Cut(payload, []byte(";"))
+	if !found {
+		return false, false, ErrInvalidTicket
+	}
+
+	rawTicketId, rawHashedEmail, found := bytes.Cut(payloadAfter, []byte(":"))
+	if !found {
+		return false, false, ErrInvalidTicket
+	}
+
+	ticketId, err := uuid.FromBytes(rawTicketId)
+	if err != nil {
+		return false, false, ErrInvalidTicket
+	}
+
+	userHashedEmail, err := base64.StdEncoding.DecodeString(string(rawHashedEmail))
+	if err != nil {
+		return false, false, fmt.Errorf("decoding base64 string for email: %w", err)
+	}
+
+	signature, err := hex.DecodeString(string(rawSignature))
+	if err != nil {
+		return false, false, fmt.Errorf("decoding hex string for signature: %w", err)
+	}
+
 	// Validate the signature and its message using ed25519. If it's invalid, return ErrInvalidTicket
+	signatureValidated := ed25519.Verify(*t.publicKey, payloadAfter, signature)
+	if !signatureValidated {
+		return false, false, fmt.Errorf("%w (verifying signature)", ErrInvalidTicket)
+	}
+
 	// Check the ticket if it's been used before. If it is, return ErrInvalidTicket. Decorate it a bit.
+	conn, err := t.db.Acquire(ctx)
+	if err != nil {
+		return false, false, fmt.Errorf("acquiring connection from pool: %w", err)
+	}
+	defer conn.Release()
+
+	tx, err := conn.BeginTx(ctx, pgx.TxOptions{
+		IsoLevel:   pgx.RepeatableRead,
+		AccessMode: pgx.ReadOnly,
+	})
+	if err != nil {
+		return false, false, fmt.Errorf("creating transaction: %w", err)
+	}
+
+	var email string
+	err = tx.QueryRow(ctx, "SELECT email, student FROM ticketing WHERE id = $1", ticketId).Scan(&email, &student)
+	if err != nil {
+		if e := tx.Rollback(ctx); e != nil {
+			return false, false, fmt.Errorf("rolling back transaction: %w (%s)", e, err.Error())
+		}
+
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, false, ErrInvalidTicket
+		}
+
+		return false, false, fmt.Errorf("acquiring data from table: %w", err)
+	}
+
+	// Validate email
+	sha384Hasher := sha512.New384()
+	sha384Hasher.Write([]byte(email))
+	hashedEmail := sha384Hasher.Sum(nil)
+	if !bytes.Equal(hashedEmail, userHashedEmail) {
+		return false, false, fmt.Errorf("%w (mismatched email)", ErrInvalidTicket)
+	}
+
 	// Mark the ticket as used
-	panic("TODO: implement me")
+	_, err = tx.Exec(ctx, "UPDATE ticketing SET used = TRUE WHERE id = $1", ticketId)
+	if err != nil {
+		if e := tx.Rollback(ctx); e != nil {
+			return false, false, fmt.Errorf("rolling back transaction: %w (%s)", e, err.Error())
+		}
+
+		return false, false, fmt.Errorf("acquiring data from table: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return false, false, fmt.Errorf("commiting transaction: %w", err)
+	}
+
+	return true, student, nil
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const fullName = ref<string>("");
+
+const photo = ref<File>();
 const email = ref<string>("");
 const config = useRuntimeConfig();
 const alert = reactive({
@@ -8,17 +9,19 @@ const alert = reactive({
 })
 
 const submit = async () => {
-    const response = await useFetch(`${config.public.backendBaseUrl}/users`, { 
+    // TODO: change endpoint to the correct one
+    const response = await useFetch(`${config.public.backendBaseUrl}/pay`, { 
         method: "POST", 
         body: {
             email: email.value,
-            name: fullName.value
+            photo: photo.value,
+            contentType: photo.value?.type ?? ""
         }
     });
     alert.type = 'success'
-    alert.msg = "Registration success. You will receive an invitation via email within 7 business days."
+    alert.msg = "Upload Payment success. You can check the status via the dashboard within 7 business days."
     if (response.error.value != null) {
-        // TODO: handle on registration response error
+        // TODO: handle on upload response error
         alert.type = 'danger'
 
         alert.msg = response.error.value?.data?.message
@@ -27,25 +30,32 @@ const submit = async () => {
             alert.msg = "Please check your input"
         }
 
-        
         return;
     }
     
 
     email.value = ''
-    fullName.value = ''
+    photo.value = undefined
+}
+
+function onFileChange(e: Event) {
+    const inputElement = e.target as HTMLInputElement;
+    if (inputElement.files && inputElement.files.length > 0) {
+        photo.value = inputElement.files[0];
+    }
 }
 </script>
 
 <template>
     <div id="page">
-        <SinglePage title="Save your spot!">
-            <p class="desc">We only have a limit for 50 participants. Reserve yours now. </p>
+        <SinglePage title="Upload your payment proof!">
+            <p class="desc">Upload now to secure your spot</p>
             <div :class="`alert alert-${alert.type} mb-5`" v-if="alert.type !== ''">{{ alert.msg }}</div>
+
             <form @submit.prevent="submit" action="" class="max-w-[500px] mb-24">
                 <div class="form-group mb-5">
-                    <label for="full-name">Full name</label>
-                    <input type="text" id='full-name' class="form-control-lg" placeholder="Juned" v-model="fullName">
+                    <label for="image">Payment proof</label>
+                    <input type="file" accept="image/*" id='image' class="form-control-lg" @change="onFileChange">
                 </div>
                 <div class="form-group mb-8">
                     <label for="email-address">Email address</label>

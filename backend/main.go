@@ -343,6 +343,68 @@ func main() {
 					return nil
 				},
 			},
+			{
+				Name:      "participants",
+				Usage:     "participants [type] [is_processed]",
+				ArgsUsage: "[type] [is_processed]",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "type",
+						Value: "",
+						Usage: "Type of user",
+					},
+					&cli.BoolFlag{
+						Name:  "is_processed",
+						Value: false,
+						Usage: "Is processed",
+					},
+				},
+				Action: func(cCtx *cli.Context) error {
+					var typeC Type
+					typeStr := cCtx.String("type")
+					isProcessedStr := cCtx.Bool("is_processed")
+
+					if typeStr == "" {
+						log.Fatal().Msg("Type is required")
+					}
+
+					if typeStr == "participant" {
+						typeC = TypeParticipant
+					}
+					if typeStr == "speaker" {
+						typeC = TypeSpeaker
+					}
+
+					conn, err := pgxpool.New(
+						context.Background(),
+						fmt.Sprintf(
+							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
+							config.DBUser,
+							config.DBPassword,
+							config.DBHost,
+							config.DBPort,
+							config.DBName,
+						),
+					)
+					if err != nil {
+						log.Fatal().Err(err).Msg("Failed to connect to database")
+					}
+					defer conn.Close()
+
+					UserDomain := NewUserDomain(conn)
+					users, err := UserDomain.GetUsers(cCtx.Context, UserFilterRequest{Type: typeC, IsProcessed: isProcessedStr})
+					if err != nil {
+						return err
+					}
+
+					log.Info().Msg("List of participants")
+					for _, user := range users {
+						log.Info().Msgf("%s - %s", user.Name, user.Email)
+					}
+
+					return nil
+				},
+			},
 		},
 	}
 

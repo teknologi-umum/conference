@@ -351,7 +351,7 @@ func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (ok boo
 	}
 
 	var email string
-	err = tx.QueryRow(ctx, "SELECT email, student FROM ticketing WHERE id = $1", ticketId).Scan(&email, &student)
+	err = tx.QueryRow(ctx, "SELECT email, student FROM ticketing WHERE id = $1 AND used = FALSE", ticketId).Scan(&email, &student)
 	if err != nil {
 		if e := tx.Rollback(ctx); e != nil {
 			return false, false, fmt.Errorf("rolling back transaction: %w (%s)", e, err.Error())
@@ -369,6 +369,10 @@ func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (ok boo
 	sha384Hasher.Write([]byte(email))
 	hashedEmail := sha384Hasher.Sum(nil)
 	if !bytes.Equal(hashedEmail, userHashedEmail) {
+		if e := tx.Rollback(ctx); e != nil {
+			return false, false, fmt.Errorf("rolling back transaction: %w (%s)", e, err.Error())
+		}
+
 		return false, false, fmt.Errorf("%w (mismatched email)", ErrInvalidTicket)
 	}
 

@@ -316,6 +316,50 @@ func App() *cli.App {
 					return nil
 				},
 			},
+			{
+				Name:      "participants",
+				Usage:     "participants [is_processed]",
+				ArgsUsage: "[is_processed]",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "is_processed",
+						Value: false,
+						Usage: "Is processed",
+					},
+				},
+				Action: func(cCtx *cli.Context) error {
+					isProcessedStr := cCtx.Bool("is_processed")
+
+					conn, err := pgxpool.New(
+						context.Background(),
+						fmt.Sprintf(
+							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
+							config.DBUser,
+							config.DBPassword,
+							config.DBHost,
+							config.DBPort,
+							config.DBName,
+						),
+					)
+					if err != nil {
+						return err
+					}
+					defer conn.Close()
+
+					UserDomain := NewUserDomain(conn)
+					users, err := UserDomain.GetUsers(cCtx.Context, UserFilterRequest{Type: TypeParticipant, IsProcessed: isProcessedStr})
+					if err != nil {
+						return err
+					}
+
+					log.Info().Msg("List of participants")
+					for _, user := range users {
+						log.Info().Msgf("%s - %s", user.Name, user.Email)
+					}
+
+					return nil
+				},
+			},
 		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{

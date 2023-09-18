@@ -141,7 +141,24 @@ func (s *ServerDependency) UploadBuktiTransfer(c echo.Context) error {
 		})
 	}
 
-	photoContentType := mime.TypeByExtension(path.Ext(photoFormFile.Filename))
+	photoExtension := path.Ext(photoFormFile.Filename)
+	// Guard the content type, the only content type allowed is images.
+	var extensionFound = false
+	for _, ext := range []string{".gif", ".jpeg", ".jpg", ".png", ".webp"} {
+		if ext == photoExtension {
+			extensionFound = true
+			break
+		}
+	}
+	if !extensionFound {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message":    "Unknown photo file type",
+			"errors":     "Unknown photo file type",
+			"request_id": requestId,
+		})
+	}
+
+	photoContentType := mime.TypeByExtension(photoExtension)
 
 	photoFile, err := photoFormFile.Open()
 	if err != nil {

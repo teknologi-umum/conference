@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime"
 	"strings"
 	"time"
 
@@ -81,8 +82,13 @@ func (t *TicketDomain) StorePaymentReceipt(ctx context.Context, email string, ph
 		return validationError
 	}
 
+	fileExtensions, _ := mime.ExtensionsByType(contentType)
+	if len(fileExtensions) == 0 {
+		fileExtensions = []string{""} // length is not zero, we can safely call fileExtensions[0]
+	}
+
 	// Store photo to filesystem (please use this one https://pkg.go.dev/gocloud.dev@v0.34.0/blob)
-	blobKey := fmt.Sprintf("%s_%s", time.Now().Format(time.RFC3339), email)
+	blobKey := fmt.Sprintf("%s_%s.%s", time.Now().Format(time.RFC3339), email, fileExtensions[0])
 	err := t.bucket.Upload(ctx, blobKey, photo, &blob.WriterOptions{
 		ContentType: contentType,
 		Metadata: map[string]string{

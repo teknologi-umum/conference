@@ -206,7 +206,7 @@ func (t *TicketDomain) ValidatePaymentReceipt(ctx context.Context, email string)
 		Subject:        "TeknumConf 2023: Tiket Anda!",
 		PlainTextBody: `Hai! Ini dia email yang kamu tunggu-tunggu💃
         
-Pembayaran kamu telah di konfirmasi! Dibawah ini terdapat QR code sebagai tiket kamu masuk ke TeknumConf 2023.
+Pembayaran kamu telah di konfirmasi! Di bawah ini terdapat QR code sebagai tiket kamu masuk ke TeknumConf 2023.
 Apabila kamu mendapat student discount, pastikan kamu membawa Kartu Mahasiswa atau Kartu Pelajar ya!
 Panitia akan melakukan verifikasi tambahan pada lokasi untuk memastikan kalau kamu betulan pelajar.
 
@@ -242,7 +242,7 @@ harap abaikan email ini. Terima kasih!`,
     <body>
         <h1>Hai! Ini dia email yang kamu tunggu-tunggu💃</h1>
         <p>
-            Pembayaran kamu telah di konfirmasi! Dibawah ini terdapat QR code sebagai tiket kamu masuk ke TeknumConf 2023.
+            Pembayaran kamu telah di konfirmasi! Di bawah ini terdapat QR code sebagai tiket kamu masuk ke TeknumConf 2023.
             Apabila kamu mendapat <i>student discount</i>, pastikan kamu membawa Kartu Mahasiswa atau Kartu Pelajar ya!
             Panitia akan melakukan verifikasi tambahan pada lokasi untuk memastikan kalau kamu betulan pelajar.
         </p>

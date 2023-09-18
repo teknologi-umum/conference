@@ -1,37 +1,12 @@
 package main_test
 
 import (
-	"os"
 	"testing"
 
 	main "conf"
 )
 
 func TestMailSender(t *testing.T) {
-	smtpHostname, ok := os.LookupEnv("SMTP_HOSTNAME")
-	if !ok {
-		smtpHostname = "localhost"
-	}
-	smtpPort, ok := os.LookupEnv("SMTP_PORT")
-	if !ok {
-		smtpPort = "1025"
-	}
-	smtpFrom, ok := os.LookupEnv("SMTP_FROM")
-	if !ok {
-		smtpFrom = ""
-	}
-	smtpPassword, ok := os.LookupEnv("SMTP_PASSWORD")
-	if !ok {
-		smtpPassword = ""
-	}
-
-	mailSender := main.NewMailSender(&main.MailConfiguration{
-		SmtpHostname: smtpHostname,
-		SmtpPort:     smtpPort,
-		SmtpFrom:     smtpFrom,
-		SmtpPassword: smtpPassword,
-	})
-
 	t.Run("Happy Scenario", func(t *testing.T) {
 		mail := &main.Mail{
 			RecipientName:  "John Doe",

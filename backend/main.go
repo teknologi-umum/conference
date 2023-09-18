@@ -14,14 +14,17 @@ import (
 	"github.com/flowchartsman/handlebars/v3"
 	"github.com/urfave/cli/v2"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/getsentry/sentry-go"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/rs/zerolog/log"
+	_ "gocloud.dev/blob/fileblob"
+	_ "gocloud.dev/blob/s3blob"
 )
 
-func main() {
+var version string
+
+func App() *cli.App {
 	config, err := GetConfig()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to get config")
@@ -30,50 +33,20 @@ func main() {
 	err = sentry.Init(sentry.ClientOptions{
 		Dsn:              "",
 		Debug:            config.Environment != "production",
-		AttachStacktrace: false,
+		AttachStacktrace: true,
 		SampleRate:       1.0,
+		Release:          version,
 		Environment:      config.Environment,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("Initiating sentry")
-		return
 	}
 
 	app := &cli.App{
-		Name:  "teknum-conf",
-		Usage: "say a greeting",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "config",
-				Value:       config.DBName,
-				Usage:       "db name",
-				Destination: &config.DBName,
-			},
-			&cli.StringFlag{
-				Name:        "db-user",
-				Value:       config.DBUser,
-				Usage:       "db user",
-				Destination: &config.DBUser,
-			},
-			&cli.StringFlag{
-				Name:        "db-password",
-				Value:       config.DBPassword,
-				Usage:       "db password",
-				Destination: &config.DBPassword,
-			},
-			&cli.StringFlag{
-				Name:        "db-host",
-				Value:       config.DBHost,
-				Usage:       "db host",
-				Destination: &config.DBHost,
-			},
-			&cli.StringFlag{
-				Name:        "port",
-				Value:       config.Port,
-				Usage:       "port",
-				Destination: &config.Port,
-			},
-		},
+		Name:           "teknum-conf",
+		Version:        version,
+		Description:    "CLI for working with Teknologi Umum Conference backend",
+		DefaultCommand: "server",
 		Commands: []*cli.Command{
 			{
 				Name: "server",
@@ -97,7 +70,7 @@ func main() {
 					userDomain := NewUserDomain(conn)
 
 					e := NewServer(&ServerConfig{
-						userDomain: userDomain,
+						UserDomain: userDomain,
 					})
 
 					exitSig := make(chan os.Signal, 1)
@@ -343,10 +316,103 @@ func main() {
 					return nil
 				},
 			},
+			{
+				Name:      "participants",
+				Usage:     "participants [is_processed]",
+				ArgsUsage: "[is_processed]",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "is_processed",
+						Value: false,
+						Usage: "Is processed",
+					},
+				},
+				Action: func(cCtx *cli.Context) error {
+					isProcessedStr := cCtx.Bool("is_processed")
+
+					conn, err := pgxpool.New(
+						context.Background(),
+						fmt.Sprintf(
+							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
+							config.DBUser,
+							config.DBPassword,
+							config.DBHost,
+							config.DBPort,
+							config.DBName,
+						),
+					)
+					if err != nil {
+						return err
+					}
+					defer conn.Close()
+
+					UserDomain := NewUserDomain(conn)
+					users, err := UserDomain.GetUsers(cCtx.Context, UserFilterRequest{Type: TypeParticipant, IsProcessed: isProcessedStr})
+					if err != nil {
+						return err
+					}
+
+					log.Info().Msg("List of participants")
+					for _, user := range users {
+						log.Info().Msgf("%s - %s", user.Name, user.Email)
+					}
+
+					return nil
+				},
+			},
 		},
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "config",
+				Value:       config.DBName,
+				Usage:       "db name",
+				Destination: &config.DBName,
+			},
+			&cli.StringFlag{
+				Name:        "db-user",
+				Value:       config.DBUser,
+				Usage:       "db user",
+				Destination: &config.DBUser,
+			},
+			&cli.StringFlag{
+				Name:        "db-password",
+				Value:       config.DBPassword,
+				Usage:       "db password",
+				Destination: &config.DBPassword,
+			},
+			&cli.StringFlag{
+				Name:        "db-host",
+				Value:       config.DBHost,
+				Usage:       "db host",
+				Destination: &config.DBHost,
+			},
+			&cli.StringFlag{
+				Name:        "port",
+				Value:       config.Port,
+				Usage:       "port",
+				Destination: &config.Port,
+			},
+		},
+		Copyright: `   Copyright 2023 Teknologi Umum
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.`,
 	}
 
-	if err := app.Run(os.Args); err != nil {
+	return app
+}
+
+func main() {
+	if err := App().Run(os.Args); err != nil {
 		log.Fatal().Err(err).Msg("Failed to run app")
 	}
 }

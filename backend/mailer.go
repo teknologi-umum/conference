@@ -2,10 +2,14 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"net"
 	"net/smtp"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type MailConfiguration struct {
@@ -21,6 +25,26 @@ type Mail struct {
 	Subject        string
 	PlainTextBody  string
 	HtmlBody       string
+	Attachments    []Attachment
+}
+
+type ContentDisposition uint8
+
+const (
+	ContentDispositionUnspecified ContentDisposition = iota
+	ContentDispositionInline
+	ContentDispositionAttachment
+)
+
+type Attachment struct {
+	Name               string
+	Description        string
+	ContentType        string
+	ContentDisposition ContentDisposition
+	ContentId          string
+	SHA256Checksum     []byte
+	// Payload must be a type of raw binary. Do not encode this to hex or base64.
+	Payload []byte
 }
 
 type Mailer struct {
@@ -37,6 +61,10 @@ func NewMailSender(configuration *MailConfiguration) *Mailer {
 
 func (m *Mailer) messageBuilder(mail *Mail) []byte {
 	// Refer to https://www.rfc-editor.org/rfc/rfc5322
+	mixedBoundary := strings.ReplaceAll(uuid.NewString(), "-", "")
+	relatedBoundary := strings.ReplaceAll(uuid.NewString(), "-", "")
+	alternateBoundary := strings.ReplaceAll(uuid.NewString(), "-", "")
+
 	var msg bytes.Buffer
 	msg.WriteString("MIME-version: 1.0\n")
 	msg.WriteString("Date: ")
@@ -45,25 +73,50 @@ func (m *Mailer) messageBuilder(mail *Mail) []byte {
 	msg.WriteString("From: \"Teknologi Umum Conference\" <conference@teknologiumum.com>\n")
 	msg.WriteString("To: " + strconv.Quote(mail.RecipientName) + " <" + mail.RecipientEmail + ">\n")
 	msg.WriteString("Subject: " + mail.Subject + "\n")
-	msg.WriteString("Content-Type: multipart/mixed; boundary=\"mixed_boundary\"\n\n")
-	msg.WriteString("--mixed_boundary\n")
-	msg.WriteString("Content-Type: multipart/related; boundary=\"related_boundary\"\n\n")
-	msg.WriteString("--related_boundary\n")
-	msg.WriteString("Content-Type: multipart/alternative; boundary=\"alternative_boundary\"\n\n")
-	msg.WriteString("--alternative_boundary\n")
+	msg.WriteString("Content-Type: multipart/mixed; boundary= " + strconv.Quote(mixedBoundary) + "\n\n")
+	msg.WriteString("--" + mixedBoundary + "\n")
+	msg.WriteString("Content-Type: multipart/related; boundary=" + strconv.Quote(relatedBoundary) + "\n\n")
+	msg.WriteString("--" + relatedBoundary + "\n")
+	msg.WriteString("Content-Type: multipart/alternative; boundary=" + strconv.Quote(alternateBoundary) + "\n\n")
+	msg.WriteString("--" + alternateBoundary + "\n")
 	msg.WriteString("Content-Type: text/plain; charset=\"us-ascii\"\n")
 	msg.WriteString("Content-Transfer-Encoding: 8bit\n")
 	msg.WriteString("\n")
 	msg.WriteString(mail.PlainTextBody)
 	msg.WriteString("\n")
-	msg.WriteString("--alternative_boundary\n")
+	msg.WriteString("--" + alternateBoundary + "\n")
 	msg.WriteString("Content-Type: text/html; charset=\"utf-8\"\n")
 	msg.WriteString("Content-Transfer-Encoding: 8bit\n")
 	msg.WriteString("\n")
 	msg.WriteString(mail.HtmlBody)
 	msg.WriteString("\n")
-	msg.WriteString("--alternative_boundary--\n")
+	msg.WriteString("--" + alternateBoundary + "--\n")
+	for _, attachment := range mail.Attachments {
+		if attachment.ContentDisposition == ContentDispositionInline {
+			msg.WriteString("\n--" + relatedBoundary + "\n")
+			msg.WriteString("Content-Type: " + attachment.ContentType + "\n")
+			msg.WriteString("Content-Disposition: inline; filename=" + strconv.Quote(attachment.Name) + ";\n")
+			msg.WriteString("Content-Description: " + attachment.Description + "\n")
+			msg.WriteString("Content-ID: <" + attachment.ContentId + ">\n")
+			msg.WriteString("Content-Transfer-Encoding: base64\n")
+			msg.WriteString("\n")
+			msg.WriteString(base64.StdEncoding.EncodeToString(attachment.Payload))
+			msg.WriteString("\n")
+			msg.WriteString("\n--" + relatedBoundary + "--\n")
+		}
 
+		if attachment.ContentDisposition == ContentDispositionAttachment {
+			msg.WriteString("\n--" + mixedBoundary + "\n")
+			msg.WriteString("Content-Type: " + attachment.ContentType + "\n")
+			msg.WriteString("Content-Disposition: attachment; filename=" + strconv.Quote(attachment.Name) + ";\n")
+			msg.WriteString("Content-Description: " + attachment.Description + "\n")
+			msg.WriteString("Content-Transfer-Encoding: base64\n")
+			msg.WriteString("\n")
+			msg.WriteString(base64.StdEncoding.EncodeToString(attachment.Payload))
+			msg.WriteString("\n")
+			msg.WriteString("\n--" + mixedBoundary + "--\n")
+		}
+	}
 	return msg.Bytes()
 }
 

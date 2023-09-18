@@ -81,14 +81,4 @@ const submit = async () => {
     background-color: #c1c1c128;
     border-color: #eeeeee;
 }
-.alert {
-    padding: 1rem;
-    border-radius: .4rem;
-}
-.alert-danger {
-    background-color: rgba(193, 60, 60, 0.859);
-}
-.alert-success {
-    background-color: rgb(42 141 45);
-}
 </style>

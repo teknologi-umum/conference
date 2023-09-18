@@ -52,3 +52,21 @@ a:hover {
     letter-spacing: .3px;
     color: #ddd;
 }
+
+.alert {
+    padding: 1rem;
+    border-radius: .4rem;
+}
+.alert-danger {
+    background-color: rgba(193, 60, 60, 0.859);
+}
+.alert-success {
+    background-color: rgb(42 141 45);
+}
+.table {
+    border-collapse: collapse;
+}
+.table td, .table th {
+    padding: 1rem;
+    border: 1px solid white;
+}

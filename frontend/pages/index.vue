@@ -77,10 +77,10 @@ const speakers = ref([
                 </div>
             </div>
         </section>
-        <section id="faq" class="section">
+        <section id="rundown" class="section">
             <div class="container | mx-auto px-5 lg:flex">
-                <div class="section-header text-center mb-16 lg:w-1/2 flex items-center justify-center">
-                    <h2 class="section-title">Rundown</h2>
+                <div class="section-header text-center mb-16 lg:w-1/2">
+                    <h2 class="section-title rundown-title">Rundown</h2>
                 </div>
                 <div class="section-content flex justify-center">
                     <Rundown></Rundown>
@@ -128,5 +128,19 @@ const speakers = ref([
     padding: 2rem 1rem;
     font-size: 1.3rem;
     border-bottom: 1px solid #ffffff5b;
+}
+@media screen and (min-width: 1024px) {
+    .rundown-title {
+        writing-mode: vertical-lr;
+        text-orientation:mixed;
+        font-size: clamp(6rem, 10vw, 9rem);
+        text-align: right;
+        transform: rotateZ(180deg);
+    }
+    #rundown .section-header {
+        justify-content: flex-end;
+        display: flex;
+        padding: 0 3rem;
+    }
 }
 </style>

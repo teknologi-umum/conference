@@ -1,24 +1,54 @@
 <script setup>
 const events = ref([
     {
-        name: 'Registration',
-        fromHour: '08.00',
-        toHour: '10.00'
+        name: 'Opening Remarks',
+        fromHour: '13.00',
+        toHour: '13.05'
     },
     {
-        name: 'Introduction',
-        fromHour: '08.00',
-        toHour: '10.00'
+        name: 'Technical Workshop by X',
+        fromHour: '13.05',
+        toHour: '13.45'
     },
     {
-        name: 'Talkshow',
-        fromHour: '10.00',
-        toHour: '14.00'
+        name: 'Technical Workshop by X',
+        fromHour: '13.50',
+        toHour: '14.30'
     },
     {
-        name: 'Closing',
-        fromHour: '08.00',
-        toHour: '14.00'
+        name: 'Technical Workshop by X',
+        fromHour: '14.35',
+        toHour: '15.35'
+    },
+    {
+        name: 'Break Ashar / Networking Session',
+        fromHour: '15.35',
+        toHour: '16.00'
+    },
+    {
+        name: 'Non-technical Worksop',
+        fromHour: '16.05',
+        toHour: '16.45'
+    },
+    {
+        name: 'Technical Workshop by X',
+        fromHour: '16.50',
+        toHour: '17.30'
+    },
+    {
+        name: 'Break Maghrib / Networking Session',
+        fromHour: '17.30',
+        toHour: '18.15'
+    },
+    {
+        name: 'Non-technical Workshop by X',
+        fromHour: '18.15',
+        toHour: '18.45'
+    },
+    {
+        name: 'Closing Remarks',
+        fromHour: '18.45',
+        toHour: '19.00'
     },
 ])
 </script>

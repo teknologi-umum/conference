@@ -181,3 +181,38 @@ func TestTicketDomain_ValidatePaymentReceipt(t *testing.T) {
 		}
 	})
 }
+
+func TestTicketDomain_VerifyIsStudent(t *testing.T){
+	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatalf("generating new ed25519 key: %s", err.Error())
+		return
+	}
+	ticketDomain, err := main.NewTicketDomain(database, bucket, &privateKey, &publicKey, mailSender)
+	if err != nil {
+		t.Fatalf("creating a ticket domain instance: %s", err.Error())
+	}
+	t.Run("Invalid email", func(t *testing.T) {
+		err := ticketDomain.VerifyIsStudent(context.Background(), "")
+		if err == nil {
+			t.Error("expecting an error, got nil instead")
+		}
+
+		var validationError *main.ValidationError
+		if errors.As(err, &validationError) {
+			if len(validationError.Errors) != 1 {
+				t.Errorf("expecting one error, got %d", len(validationError.Errors))
+			}
+		}
+	})
+
+	t.Run("Happy scenario", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
+
+		err := ticketDomain.VerifyIsStudent(ctx, "aji@test.com")
+		if err != nil {
+			t.Errorf("unexpected error: %s", err.Error())
+		}
+	})
+}

@@ -394,3 +394,43 @@ func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (ok boo
 
 	return true, student, nil
 }
+
+
+func (t *TicketDomain) VerifyIsStudent(ctx context.Context, email string) (err error){
+	var validationError ValidationError
+	if email == "" {
+		validationError.Errors = append(validationError.Errors, "email is empty")
+	}
+
+	if len(validationError.Errors) > 0 {
+		return validationError
+	}
+
+	c, err := t.db.Acquire(ctx)
+	if err != nil {
+		return
+	}
+	defer c.Release()
+
+	tx, err := c.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
+	if err != nil {
+		return
+	}
+
+	_, err = tx.Exec(ctx, "UPDATE ticketing SET student = TRUE WHERE email = $1", email)
+	if err != nil {
+		if e := tx.Rollback(ctx); e != nil {
+			err = e
+			return
+		}
+
+		return
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return
+	}
+	
+	return nil
+}

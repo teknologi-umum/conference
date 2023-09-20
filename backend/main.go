@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -18,6 +20,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/rs/zerolog/log"
+	"gocloud.dev/blob"
 	_ "gocloud.dev/blob/fileblob"
 	_ "gocloud.dev/blob/s3blob"
 )
@@ -124,14 +127,14 @@ func App() *cli.App {
 					case "down":
 						err := migration.Down(cCtx.Context)
 						if err != nil {
-							return fmt.Errorf("Executing down migration: %w", err)
+							return fmt.Errorf("executing down migration: %w", err)
 						}
 					case "up":
 						fallthrough
 					default:
 						err := migration.Up(cCtx.Context)
 						if err != nil {
-							return fmt.Errorf("Executing up migration: %w", err)
+							return fmt.Errorf("executing up migration: %w", err)
 						}
 					}
 
@@ -272,7 +275,7 @@ func App() *cli.App {
 							log.Fatal().Err(err).Msg("Failed to read email list")
 						}
 
-						userList, err = csvReader(string(emailList))
+						userList, err = csvReader(string(emailList), true)
 						if err != nil {
 							log.Fatal().Err(err).Msg("Failed to parse email list")
 						}
@@ -355,6 +358,87 @@ func App() *cli.App {
 					log.Info().Msg("List of participants")
 					for _, user := range users {
 						log.Info().Msgf("%s - %s", user.Name, user.Email)
+					}
+
+					return nil
+				},
+			},
+			{
+				Name:      "student-verification",
+				Usage:     "student-verification [path-csv-file]",
+				ArgsUsage: "[path-csv-file]",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "bulk-verification",
+						Value:    "",
+						Required: false,
+					},
+					&cli.StringFlag{
+						Name:     "single-verification",
+						Value:    "",
+						Required: false,
+					},
+				},
+				Action: func(cCtx *cli.Context) error {
+					bulkVerification := cCtx.String("bulk-verification")
+					singleVerification := cCtx.String("single-verification")
+
+					if bulkVerification == "" && singleVerification == "" {
+						return fmt.Errorf("requires `--bulk-verification` or `--single-verification` flag")
+					}
+
+					var students []User
+					if bulkVerification != "" {
+						emailList, err := os.ReadFile(bulkVerification)
+						if err != nil {
+							log.Fatal().Err(err).Msg("Failed to read email list")
+						}
+
+						students, err = csvReader(string(emailList), false)
+						if err != nil {
+							log.Fatal().Err(err).Msg("Failed to parse email list")
+						}
+					} else {
+						students = append(students, User{
+							Email: singleVerification,
+						})
+					}
+
+					// TODO: do not deploy this with this state
+					bucket := &blob.Bucket{}
+					publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+					if err != nil {
+						log.Fatal().Err(err).Msgf("generating new ed25519 key: %s", err.Error())
+					}
+					mailer := &Mailer{}
+					conn, err := pgxpool.New(
+						context.Background(),
+						fmt.Sprintf(
+							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
+							config.DBUser,
+							config.DBPassword,
+							config.DBHost,
+							config.DBPort,
+							config.DBName,
+						),
+					)
+					if err != nil {
+						return fmt.Errorf("failed to connect to database: %w", err)
+					}
+
+					ticketDomain, err := NewTicketDomain(conn, bucket, &privateKey, &publicKey, mailer)
+					if err != nil {
+						log.Fatal().Err(err).Msgf("creating a ticket domain instance: %s", err.Error())
+					}
+
+					for _, student := range students {
+						err := ticketDomain.VerifyIsStudent(context.Background(), student.Email)
+						if err != nil {
+							log.Error().Err(err).Msgf("Failed to verify student %s", student.Email)
+							continue
+						}
+
+						log.Info().Msgf("Verified student %s", student.Email)
 					}
 
 					return nil

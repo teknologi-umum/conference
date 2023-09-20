@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func csvReader(readType, file string) (users []User, err error) {
+func csvReader(file string, mandatoryNameField bool) (users []User, err error) {
 	r := csv.NewReader(strings.NewReader(file))
 	header, err := r.Read()
 	if err != nil {
@@ -24,13 +24,14 @@ func csvReader(readType, file string) (users []User, err error) {
 			m[h] = record[i]
 		}
 		var name, email string
-		if readType == "blast-email" {
+		if mandatoryNameField {
 			if m["name"] == "" {
 				err = errors.New("name is required")
 				return nil, err
 			}
 			name = m["name"]
 		}
+		
 		if m["email"] == "" {
 			err = errors.New("email is required")
 			return nil, err

@@ -275,7 +275,7 @@ func App() *cli.App {
 							log.Fatal().Err(err).Msg("Failed to read email list")
 						}
 
-						userList, err = csvReader("blast-email",string(emailList))
+						userList, err = csvReader(string(emailList), true)
 						if err != nil {
 							log.Fatal().Err(err).Msg("Failed to parse email list")
 						}
@@ -364,7 +364,9 @@ func App() *cli.App {
 				},
 			},
 			{
-				Name: "student-verification",
+				Name:      "student-verification",
+				Usage:     "student-verification [path-csv-file]",
+				ArgsUsage: "[path-csv-file]",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "bulk-verification",
@@ -377,34 +379,32 @@ func App() *cli.App {
 						Required: false,
 					},
 				},
-				Usage:     "student-verification [path-csv-file]",
-				ArgsUsage: "[path-csv-file]",
 				Action: func(cCtx *cli.Context) error {
-					csv := cCtx.String("bulk-verification")
-					singleVerified := cCtx.String("single-verification")
+					bulkVerification := cCtx.String("bulk-verification")
+					singleVerification := cCtx.String("single-verification")
 
-					if csv == "" && singleVerified == "" {
-						log.Fatal().Msg("CSV file is required")
+					if bulkVerification == "" && singleVerification == "" {
+						return fmt.Errorf("requires `--bulk-verification` or `--single-verification` flag")
 					}
 
 					var students []User
-
-					if csv != "" {
-						emailList, err := os.ReadFile(csv)
+					if bulkVerification != "" {
+						emailList, err := os.ReadFile(bulkVerification)
 						if err != nil {
 							log.Fatal().Err(err).Msg("Failed to read email list")
 						}
 
-						students, err = csvReader("student-verification",string(emailList))
+						students, err = csvReader(string(emailList), false)
 						if err != nil {
 							log.Fatal().Err(err).Msg("Failed to parse email list")
 						}
 					} else {
 						students = append(students, User{
-							Email: singleVerified,
+							Email: singleVerification,
 						})
 					}
 
+					// TODO: do not deploy this with this state
 					bucket := &blob.Bucket{}
 					publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 					if err != nil {

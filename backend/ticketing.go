@@ -397,13 +397,8 @@ func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (ok boo
 
 
 func (t *TicketDomain) VerifyIsStudent(ctx context.Context, email string) (err error){
-	var validationError ValidationError
 	if email == "" {
-		validationError.Errors = append(validationError.Errors, "email is empty")
-	}
-
-	if len(validationError.Errors) > 0 {
-		return validationError
+		return ValidationError{Errors: []string{"email is empty"}}
 	}
 
 	c, err := t.db.Acquire(ctx)

@@ -423,7 +423,7 @@ func App() *cli.App {
 						),
 					)
 					if err != nil {
-						log.Fatal().Err(err).Msg("Failed to connect to database")
+						return fmt.Errorf("failed to connect to database: %w", err)
 					}
 
 					ticketDomain, err := NewTicketDomain(conn, bucket, &privateKey, &publicKey, mailer)

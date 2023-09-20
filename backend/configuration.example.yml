@@ -1,0 +1,22 @@
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  database: postgres
+
+environment: local
+
+port: 8080
+
+mailer:
+  hostname: localhost
+  port: 25
+  from: administrator@localhost
+  password:
+
+blob_url: file:///tmp/teknologi-umum-conference
+
+signature:
+    public_key: hex encoded string
+    private_key: hex encoded string

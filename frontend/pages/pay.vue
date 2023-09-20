@@ -9,22 +9,27 @@ const alert = reactive({
 })
 
 const submit = async () => {
+    const formData = new FormData()
+
+    formData.append('email', email.value)
+    formData.append('photo', photo.value!)
+
     // TODO: change endpoint to the correct one
-    const response = await useFetch(`${config.public.backendBaseUrl}/pay`, { 
+    const response = await useFetch(`${config.public.backendBaseUrl}/bukti-transfer`, { 
         method: "POST", 
-        body: {
-            email: email.value,
-            photo: photo.value,
-            contentType: photo.value?.type ?? ""
-        }
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        },
+        body: formData
     });
     alert.type = 'success'
-    alert.msg = "Upload Payment success. You can check the status via the dashboard within 7 business days."
+    alert.msg = "Upload Payment success. Please wait for the email regarding the payment status."
+
     if (response.error.value != null) {
         // TODO: handle on upload response error
         alert.type = 'danger'
 
-        alert.msg = response.error.value?.data?.message
+        alert.msg = response.error.value?.data?.message || "System error"
         
         if(response.error.value?.statusCode == 400) {
             alert.msg = "Please check your input"
@@ -55,11 +60,11 @@ function onFileChange(e: Event) {
             <form @submit.prevent="submit" action="" class="max-w-[500px] mb-24">
                 <div class="form-group mb-5">
                     <label for="image">Payment proof</label>
-                    <input type="file" accept="image/*" id='image' class="form-control-lg" @change="onFileChange">
+                    <input type="file" accept="image/*" id='image' class="form-control-lg" @change="onFileChange" required>
                 </div>
                 <div class="form-group mb-8">
                     <label for="email-address">Email address</label>
-                    <input type="email" id='email-address' class="form-control-lg" placeholder="juned@company.com" v-model="email">
+                    <input type="email" id='email-address' class="form-control-lg" placeholder="juned@company.com" v-model="email" required>
                 </div>
                 <Btn size="lg">Upload proof</Btn>
             </form>

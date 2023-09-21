@@ -87,6 +87,25 @@ const speakers = ref([
                 </div>
             </div>
         </section>
+        <section id="venue" class="section relative">
+            <div class="container | mx-auto px-5 lg:flex ">
+                <div class="section-left text-center mb-16 lg:w-1/2">
+                    <h2 class="section-title mb-8">How to get to venue</h2>
+                    <Tabs>
+                        <Tab name="Go-Jek/Ojol">rst</Tab>
+                        <Tab name="Public Transport"></Tab>
+                        <Tab name="KRL">
+1. kalo kamu dari tengah kota, ambil rute "Bogor Line"
+2. berhenti di Stasiun Pondok Cina
+3. dari situ tinggal jalan kaki 10 menit, ada pathway langsung ke venue (tidak wheelchair accessible)
+                        </Tab>
+                    </Tabs>
+                </div>
+                <div class="section-right flex justify-center">
+                    <img src="/detos.jpg" id="img-venue">
+                </div>
+            </div>
+        </section>
         <section id="faq" class="section">
             <div class="container | mx-auto px-5">
                 <div class="section-header text-center mb-16">
@@ -142,5 +161,19 @@ const speakers = ref([
         display: flex;
         padding: 0 3rem;
     }
+}
+#venue {
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.131), rgba(93, 93, 93, 0.24), rgba(255, 255, 255, 0.2));
+    padding: 3rem 0;
+    backdrop-filter: blur(1rem);
+    min-height: 500px;
+}
+#img-venue {
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40%;
+    height: 100%;
 }
 </style>

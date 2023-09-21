@@ -19,8 +19,8 @@ func TestNewTicketDomain(t *testing.T) {
 	// Create mock dependencies.
 	db := &pgxpool.Pool{}
 	bucket := &blob.Bucket{}
-	privateKey := &ed25519.PrivateKey{}
-	publicKey := &ed25519.PublicKey{}
+	privateKey := ed25519.PrivateKey{}
+	publicKey := ed25519.PublicKey{}
 	mailer := &main.Mailer{}
 
 	// Group the tests with t.Run().
@@ -92,7 +92,7 @@ func TestTicketDomain_StorePaymentReceipt(t *testing.T) {
 		return
 	}
 
-	ticketDomain, err := main.NewTicketDomain(database, bucket, &privateKey, &publicKey, mailSender)
+	ticketDomain, err := main.NewTicketDomain(database, bucket, privateKey, publicKey, mailSender)
 	if err != nil {
 		t.Fatalf("creating a ticket domain instance: %s", err.Error())
 	}
@@ -129,7 +129,7 @@ func TestTicketDomain_ValidatePaymentReceipt(t *testing.T) {
 		return
 	}
 
-	ticketDomain, err := main.NewTicketDomain(database, bucket, &privateKey, &publicKey, mailSender)
+	ticketDomain, err := main.NewTicketDomain(database, bucket, privateKey, publicKey, mailSender)
 	if err != nil {
 		t.Fatalf("creating a ticket domain instance: %s", err.Error())
 	}
@@ -182,13 +182,13 @@ func TestTicketDomain_ValidatePaymentReceipt(t *testing.T) {
 	})
 }
 
-func TestTicketDomain_VerifyIsStudent(t *testing.T){
+func TestTicketDomain_VerifyIsStudent(t *testing.T) {
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatalf("generating new ed25519 key: %s", err.Error())
 		return
 	}
-	ticketDomain, err := main.NewTicketDomain(database, bucket, &privateKey, &publicKey, mailSender)
+	ticketDomain, err := main.NewTicketDomain(database, bucket, privateKey, publicKey, mailSender)
 	if err != nil {
 		t.Fatalf("creating a ticket domain instance: %s", err.Error())
 	}

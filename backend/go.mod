@@ -3,6 +3,7 @@ module conf
 go 1.21
 
 require (
+	dario.cat/mergo v1.0.0
 	github.com/flowchartsman/handlebars/v3 v3.0.1
 	github.com/getsentry/sentry-go v0.23.0
 	github.com/google/uuid v1.3.0
@@ -14,6 +15,7 @@ require (
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/urfave/cli/v2 v2.25.7
 	gocloud.dev v0.34.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -47,9 +49,11 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect

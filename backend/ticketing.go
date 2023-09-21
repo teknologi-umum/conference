@@ -32,7 +32,7 @@ type TicketDomain struct {
 	mailer     *Mailer
 }
 
-func NewTicketDomain(db *pgxpool.Pool, bucket *blob.Bucket, privateKey *ed25519.PrivateKey, publicKey *ed25519.PublicKey, mailer *Mailer) (*TicketDomain, error) {
+func NewTicketDomain(db *pgxpool.Pool, bucket *blob.Bucket, privateKey ed25519.PrivateKey, publicKey ed25519.PublicKey, mailer *Mailer) (*TicketDomain, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
@@ -56,8 +56,8 @@ func NewTicketDomain(db *pgxpool.Pool, bucket *blob.Bucket, privateKey *ed25519.
 	return &TicketDomain{
 		db:         db,
 		bucket:     bucket,
-		privateKey: privateKey,
-		publicKey:  publicKey,
+		privateKey: &privateKey,
+		publicKey:  &publicKey,
 		mailer:     mailer,
 	}, nil
 }
@@ -395,8 +395,7 @@ func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (ok boo
 	return true, student, nil
 }
 
-
-func (t *TicketDomain) VerifyIsStudent(ctx context.Context, email string) (err error){
+func (t *TicketDomain) VerifyIsStudent(ctx context.Context, email string) (err error) {
 	if email == "" {
 		return ValidationError{Errors: []string{"email is empty"}}
 	}
@@ -426,6 +425,6 @@ func (t *TicketDomain) VerifyIsStudent(ctx context.Context, email string) (err e
 	if err != nil {
 		return
 	}
-	
+
 	return nil
 }

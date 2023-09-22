@@ -1,4 +1,7 @@
 <project version="4">
+  <component name="Black">
+    <option name="sdkName" value="Python 3.11 (conf)" />
+  </component>
   <component name="JsBuildToolPackageJson" sorting="DEFINITION_ORDER" />
   <component name="ProjectRootManager" version="2" languageLevel="JDK_20" project-jdk-name="Python 3.11 (conf)" project-jdk-type="Python SDK">
     <output url="file://$PROJECT_DIR$/out" />

@@ -1,0 +1,24 @@
+Hello, {{ name }}, Teknum Conference is Heereeeeeeeeee! 🎉 🚀
+
+        Selamat! Anda sudah terverifikasi sebagai pelajar/mahasiswa!
+
+        
+            Anda sekarang memiliki hak untuk mendapatkan potongan
+            {{ percentageStudentHighSchoolDiscount }}% atau senilai Rp.
+            {{ ticketStudentHighSchoolDiscount }}.
+        
+
+        
+            Segera amankan slot Anda dengan melakukan pembayaran sebesar Rp.
+            {{ ticketStudentHighSchoolPrice }} ke salah satu rekening berikut:
+        
+
+        {{ bankAccounts }}
+
+        
+        
+            Setelah melakukan pembayaran, jangan lupa unggah bukti pembayaran Anda di tautan
+            berikut ini.
+        
+
+        Sampai jumpa di Teknum Conference!

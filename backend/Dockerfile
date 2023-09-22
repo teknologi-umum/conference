@@ -4,20 +4,20 @@ WORKDIR /app
 
 COPY . .
 
-RUN go build -o conf-backend -ldflags="-s -w" .
+RUN go build -o conf-backend -ldflags="-s -w -X main.version=$(git rev-parse HEAD)" .
 
 FROM debian:bookworm-slim AS runtime
 
-WORKDIR /app 
+WORKDIR /app
 
 RUN apt-get update && \
     apt-get install -y curl && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /app/csv && \
+    mkdir -p /data
 
 ARG PORT=8080
-
-RUN mkdir -p /app/csv
 
 COPY --from=build /app/ .
 

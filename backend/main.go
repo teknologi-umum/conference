@@ -384,7 +384,7 @@ func App() *cli.App {
 							"conferenceEmail":                     config.EmailTemplate.ConferenceEmail,
 							"bankAccounts":                        config.EmailTemplate.BankAccounts,
 						}
-						mail.PlainTextBody = plaintextTemplate.MustExec(emailTemplate)
+						mail.PlainTextBody = plaintextTemplate.MustExec(strings.Replace(emailTemplate, ".html", ".txt", 1))
 						mail.HtmlBody = htmlTemplate.MustExec(emailTemplate)
 
 						err := mailSender.Send(mail)

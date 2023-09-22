@@ -187,10 +187,15 @@ const speakers = ref([
     }
 }
 #venue {
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.131), rgba(93, 93, 93, 0.24), rgba(255, 255, 255, 0.2));
+    background: linear-gradient(120deg, rgba(1, 2, 15, 0.883),
+                    rgba(0, 0, 0, 0.95), 
+                    rgba(5, 12, 34, 0.879)),
+                url('@/assets/images/venue.jpg') no-repeat;
+    background-size: cover;
     padding: 3rem 0;
     backdrop-filter: blur(1rem);
     min-height: 500px;
+    line-height: 2rem;
 }
 #img-venue {
     object-fit: cover;

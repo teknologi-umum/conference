@@ -23,14 +23,11 @@ const tabItems = slots.default!()
     </div>
 </template>
 <style>
-.tab-title:not(.active) {
-    border-bottom: 1px solid #ccc;
-}
 .tab-closing {
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #cccccc3b;
 }
 .tab-title:is(.active) {
-    border: 1px solid #ccc;
+    border: 1px solid #cccccc3b;
     border-bottom: 0;
     border-top-left-radius: .3rem;
     border-top-right-radius: .3rem;
@@ -38,7 +35,8 @@ const tabItems = slots.default!()
     background: #ffffff12;
 }
 .tab-content {
-    border: 1px solid #ccc;
+    border: 1px solid #cccccc7b;
+    background-color: rgba(255, 255, 255, 0.035);
     min-height: 200px;
 }
 

@@ -13,8 +13,8 @@ const speakers = ref([
     },
     {
         name: "M. Gilang Januar",
-        title: "The Business Mind in a Pragmatic Engineer: Building Boring Businesses",
-        description: "belom ada",
+        title: "The Business Mind in a Pragmatic Engineer: Building Boring Businesses",
+        description: "Berbicara tentang memiliki side hustle sebagai seorang software engineer. Mulai dari ideation, business and marketing strategy, contoh studi kasus, dan hal menarik lainnya. Harapannya peserta dapat melihat business value dari kacamata seoarang pragmatic engineer.",
     },
     {
         name: "Riza Ramadan",
@@ -92,12 +92,27 @@ const speakers = ref([
                 <div class="section-left text-center mb-16 lg:w-1/2">
                     <h2 class="section-title mb-8">How to get to venue</h2>
                     <Tabs>
-                        <Tab name="Go-Jek/Ojol">rst</Tab>
-                        <Tab name="Public Transport"></Tab>
-                        <Tab name="KRL">
-1. kalo kamu dari tengah kota, ambil rute "Bogor Line"
-2. berhenti di Stasiun Pondok Cina
-3. dari situ tinggal jalan kaki 10 menit, ada pathway langsung ke venue (tidak wheelchair accessible)
+                        <Tab name="Train (preferred)">
+                          <p>Jakarta has a public train called KRL. Using this method is most preferred during the day of the event. Please note that this walk path is not wheelchair accessible.</p>
+                          <ol>
+                            <li>From any other station, go for <strong>"Bogor Line"</strong></li>
+                            <li>Stop at <strong>Pondok Cina station</strong>, don't use the normal exit, go upstairs (through stairs or escalators) exit through gate A pointed to "Perumnas Mahata" and "Jl. Margonda Raya"</li>
+                            <li>Go down from Perumnas Mahata through elevator (from UG to GF) or stairs, walk to Depok Town Square (you should be able to see its' parking building)</li>
+                            <li>Go up the stairs (black alumunium stairs), then go left at the interchange</li>
+                            <li>The venue is on your exact left</li>
+                          </ol>
+                        </Tab>
+                        <Tab name="Ridesharing (Gojek, Grab, Maxim)">
+                          <ol>
+                            <li>Set your destination either directly to Depok Town Square or Margo City. If Margo City is cheaper for you, you can walk through the pedestrian bridge that connects Margo City to Depok Town Square.</li>
+                            <li>From the lobby, go up 1 floor to the UG level</li>
+                            <li>Walk through the right side of the mall. Halfway, you'll see an exit on the right.</li>
+                            <li>Go out through the door (you'll be outdoor now), the venue is across the mall entrance door slightly to the left</li>
+                          </ol>
+                        </Tab>
+                        <Tab name="Personal Vehicle (Car, Bikes)">
+                          <p>Parking is available for both cars and motorbikes. For cars, it's recommended to park near P3 level.</p>
+                          <p>If you are a person with wheelchair, you can drop exactly at the front of the venue. It is across the mall entrance door after you enter the cars parking gate.</p>
                         </Tab>
                     </Tabs>
                 </div>

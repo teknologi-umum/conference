@@ -1,22 +1,22 @@
 <script setup>
 const events = ref([
     {
-        name: 'Opening Remarks',
+        name: 'Doors open / Opening Remarks',
         fromHour: '13.00',
         toHour: '13.05'
     },
     {
-        name: 'Technical Workshop by X',
+        name: 'The Business Mind in a Pragmatic Engineer: Building Boring Businesses by M. Gilang Januar',
         fromHour: '13.05',
         toHour: '13.45'
     },
     {
-        name: 'Technical Workshop by X',
+        name: 'Loving Rust not because of the Performance by Mustafa Zaki Assagaf',
         fromHour: '13.50',
         toHour: '14.30'
     },
     {
-        name: 'Technical Workshop by X',
+        name: 'Career Talk: How to strive in Indonesia tech industry',
         fromHour: '14.35',
         toHour: '15.35'
     },
@@ -26,12 +26,12 @@ const events = ref([
         toHour: '16.00'
     },
     {
-        name: 'Non-technical Worksop',
+        name: 'Surprise Workshop (soon)',
         fromHour: '16.05',
         toHour: '16.45'
     },
     {
-        name: 'Technical Workshop by X',
+        name: 'Melakukan TDD meski situasi tidak kondusif by Riza Ramadan',
         fromHour: '16.50',
         toHour: '17.30'
     },
@@ -41,7 +41,7 @@ const events = ref([
         toHour: '18.15'
     },
     {
-        name: 'Non-technical Workshop by X',
+        name: 'Tanda-Tanda Kamu Punya Skill Issue by Didiet Noor',
         fromHour: '18.15',
         toHour: '18.45'
     },

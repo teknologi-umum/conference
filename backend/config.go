@@ -30,6 +30,17 @@ type Config struct {
 		PublicKey  string `yaml:"public_key" envconfig:"SIGNATURE_PUBLIC_KEY"`
 		PrivateKey string `yaml:"private_key" envconfig:"SIGNATURE_PRIVATE_KEY"`
 	} `yaml:"signature"`
+	EmailTemplate struct {
+		TicketPrice                         string `yaml:"ticket_price" envconfig:"EMAIL_TEMPLATE_TICKET_PRICE"`
+		TicketStudentCollegePrice           string `yaml:"ticket_student_college_price" envconfig:"EMAIL_TEMPLATE_TICKET_STUDENT_COLLEGE_PRICE"`
+		TicketStudentHighSchoolPrice        string `yaml:"ticket_student_high_school_price" envconfig:"EMAIL_TEMPLATE_TICKET_STUDENT_HIGH_SCHOOL_PRICE"`
+		TicketStudentCollegeDiscount        string `yaml:"ticket_student_college_discount" envconfig:"EMAIL_TEMPLATE_TICKET_STUDENT_COLLEGE_DISCOUNT"`
+		TicketStudentHighSchoolDiscount     string `yaml:"ticket_student_high_school_discount" envconfig:"EMAIL_TEMPLATE_TICKET_STUDENT_HIGH_SCHOOL_DISCOUNT"`
+		PercentageStudentCollegeDiscount    string `yaml:"percentage_student_college_discount" envconfig:"EMAIL_TEMPLATE_PERCENTAGE_STUDENT_COLLEGE_DISCOUNT"`
+		PercentageStudentHighSchoolDiscount string `yaml:"percentage_student_high_school_discount" envconfig:"EMAIL_TEMPLATE_PERCENTAGE_STUDENT_HIGH_SCHOOL_DISCOUNT"`
+		ConferenceEmail                     string `yaml:"conference_email" envconfig:"EMAIL_TEMPLATE_CONFERENCE_EMAIL"`
+		BankAccounts                        string `yaml:"bank_accounts" envconfig:"EMAIL_TEMPLATE_BANK_ACCOUNTS"` // List of bank accounts for payments in HTML format
+	} `yaml:"email_template"`
 }
 
 func GetConfig(configurationFile string) (Config, error) {

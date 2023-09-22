@@ -1,0 +1,11 @@
+Hi, {{ name }}!
+
+Reinaldy's here. I know it's been a while since you submitted your talk application for TeknumConf 2023, but here we are. The team behind TeknumConf 2023 has been busy with finishing up the venue and other stuffs to make sure the event will happen.
+Thank you for your interest in speaking at TeknumConf 2023. We received a record number of proposals this year, and we were very impressed with the quality of your submission.
+After careful consideration, we have decided to move forward with other speakers whose proposals more closely aligned with our criteria for this year's conference. We understand that this may be disappointing news, and we want to assure you that this is in no way a reflection of your qualifications or expertise.
+We hope that you will still consider attending TeknumConf 2023. This year's conference will feature a variety of exciting speakers and sessions on the latest trends and technologies in the computing industry. We are confident that you will find the conference to be informative and valuable.
+Again, thank you for your interest in speaking at TeknumConf 2023. We wish you all the best in your future endeavors.
+TeknumConf 2023 will be held at Kode Creative Hub, Depok Town Square at 21 October 2023. The event will start around 13:00 (post-lunch) until 19:00. Please do make sure you have your calendar marked for that one 😉
+For any further questions, you can reply to this email directly, or contact me through Telegram @aldy505. I hope you're looking forward to the event as much as I do!
+    
+Best regards, ReinaldyFrom the team at TeknumConf 2023

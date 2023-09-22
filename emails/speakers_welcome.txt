@@ -1,1 +1,19 @@
-$END$
+Hi, {{ name }}!
+
+Reinaldy's here. I know it's been a while since you submitted your talk application for TeknumConf 2023, but here we are. The team behind TeknumConf 2023 has been busy with finishing up the venue and other stuffs to make sure the event will happen.
+First of all, congratulations! We've reviewed your application and you're accepted as one of TeknumConf 2023's speaker.
+
+Here's the next step: We will need a few things from you by 30 September 2023 (but the sooner you send it, the better):
+1. Your personal data:
+  - Your name
+  - Photo (we will put this on the event banner)
+  - Preferred contact (should it be WhatsApp phone number or Telegram username, it's up to you!)
+2. Presentation slides (preferably in PDF format, we'll need to review the presentation content beforehand to make sure it's aligned with our code of conduct).
+            
+TeknumConf 2023 will be held at Kode Creative Hub, Depok Town Square at 21 October 2023. The event will start around 13:00 (post-lunch) until 19:00. Please do make sure you have your calendar marked for that one 😉
+
+For any further questions, you can reply to this email directly, or contact me through Telegram @aldy505. I hope you're looking forward to the event as much as I do!
+    
+Best regards,
+Reinaldy
+From the team at TeknumConf 2023

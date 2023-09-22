@@ -1,0 +1,35 @@
+Hello, {{ name }}, Teknum Conference is Heereeeeeeeeee! 🎉 🚀
+
+        Terima kasih atas antusias Anda terhadap Teknum Conference.
+
+        Segera amankan slot Anda dengan melakukan pembayaran sebagai berikut:
+
+        {{ payments }}
+
+        
+        
+            Setelah melakukan pembayaran, jangan lupa unggah bukti pembayaran Anda di tautan
+            berikut ini.
+        
+
+        
+
+        Jika Anda adalah pelajar/mahasiswa, kami memiliki harga khusus untuk Anda!Bagaimana syaratnya?
+
+        
+            Untuk memastikan bahwa Anda adalah seorang mahasiswa/pelajar, kami memerlukan verifikasi lebih lanjut untuk
+            memastikan status Anda.
+        
+
+        
+            Silahkan kirimkan Kartu Tanda Mahasiswa (KTM) / Kartu Tanda Pelajar (KTP) Anda ke {{ conferenceEmail }}
+            format subject email sebagai berikut:
+        
+
+        [Name] - Student Discount Teknum Conference
+
+        Pastikan bahwa Anda menggunakan email yang sama dengan email yang terdaftar di conf.teknologiumum.com.
+
+        Kami akan mengabari Anda lebih lanjut jika data Anda terverifikasi sebagai pelajar/mahasiswa.
+
+        Sampai jumpa di Teknum Conference!

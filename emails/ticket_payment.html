@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+        <meta content="width=device-width,initial-scale=1 user-scalable=yes" name="viewport" />
+        <meta content="telephone=no, date=no, address=no, email=no, url=no" name="format-detection" />
+        <meta name="x-apple-disable-message-reformatting" />
+        <meta charset="UTF-8" />
+        <!--[if mso]>
+            <noscript>
+                <xml>
+                    <o:OfficeDocumentSettings>
+                        <o:PixelsPerInch>96</o:PixelsPerInch>
+                    </o:OfficeDocumentSettings>
+                </xml>
+            </noscript>
+        <![endif]-->
+
+        <style>
+            .quote {
+                font: 14px/22px normal helvetica, sans-serif;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                margin-left: 50px;
+                padding-left: 15px;
+                border-left: 3px solid #ccc;
+            }
+
+            /* Solid border */
+            hr.solid {
+                border-top: 3px solid #bbb;
+            }
+
+            * {
+                font-family: "Rubik", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+                    Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+            }
+        </style>
+        <title>TeknumConf - Open Ticket Reservation!</title>
+    </head>
+    <body>
+        <h1>Hello, {{ name }}, Teknum Conference is Heereeeeeeeeee! 🎉 🚀</h1>
+
+        <p>Terima kasih atas antusias Anda terhadap Teknum Conference.</p>
+
+        <p>
+            Segera amankan slot Anda dengan melakukan pembayaran sebesar Rp. <strong>{{ ticketPrice }}</strong> ke salah
+            satu rekening berikut:
+        </p>
+
+        <p>{{ payments }}</p>
+
+        <p></p>
+        <p>
+            Setelah melakukan pembayaran, jangan lupa unggah bukti pembayaran Anda di tautan
+            <strong><a href="https://conf.teknologiumum.com/pay" target="_blank">berikut ini</a></strong
+            >.
+        </p>
+
+        <hr class="solid" />
+
+        <p>Jika Anda adalah pelajar/mahasiswa, kami memiliki harga khusus untuk Anda!<br />Bagaimana syaratnya?</p>
+
+        <p>
+            Untuk memastikan bahwa Anda adalah seorang mahasiswa/pelajar, kami memerlukan verifikasi lebih lanjut untuk
+            memastikan status Anda.
+        </p>
+
+        <p>
+            Silahkan kirimkan Kartu Tanda Mahasiswa (KTM) / Kartu Tanda Pelajar (KTP) Anda ke {{ conferenceEmail }}
+            format subject email sebagai berikut:
+        </p>
+
+        <blockquote class="quote">[Name] - Student Discount Teknum Conference</blockquote>
+
+        <p>Pastikan bahwa Anda menggunakan email yang sama dengan email yang terdaftar di conf.teknologiumum.com.</p>
+
+        <p>Kami akan mengabari Anda lebih lanjut jika data Anda terverifikasi sebagai pelajar/mahasiswa.</p>
+
+        <p><strong>Sampai jumpa di Teknum Conference!</strong></p>
+    </body>
+</html>

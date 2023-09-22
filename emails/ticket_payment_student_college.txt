@@ -13,7 +13,7 @@ Hello, {{ name }}, Teknum Conference is Heereeeeeeeeee! 🎉 🚀
             {{ ticketStudentCollegePrice }} ke salah satu rekening berikut:
         
 
-        {{ payments }}
+        {{ bankAccounts }}
 
         
         

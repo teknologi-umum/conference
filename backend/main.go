@@ -372,6 +372,21 @@ func App() *cli.App {
 							mail.HtmlBody = htmlTemplate.MustExec(map[string]any{"name": user.Name})
 						}
 
+						// Parse email template information
+						emailTemplate := map[string]any{
+							"ticketPrice":                         config.EmailTemplate.TicketPrice,
+							"ticketStudentCollegePrice":           config.EmailTemplate.TicketStudentCollegePrice,
+							"ticketStudentHighSchoolPrice":        config.EmailTemplate.TicketStudentHighSchoolPrice,
+							"ticketStudentCollegeDiscount":        config.EmailTemplate.TicketStudentCollegeDiscount,
+							"ticketStudentHighSchoolDiscount":     config.EmailTemplate.TicketStudentHighSchoolDiscount,
+							"percentageStudentCollegeDiscount":    config.EmailTemplate.PercentageStudentCollegeDiscount,
+							"percentageStudentHighSchoolDiscount": config.EmailTemplate.PercentageStudentHighSchoolDiscount,
+							"conferenceEmail":                     config.EmailTemplate.ConferenceEmail,
+							"bankAccounts":                        config.EmailTemplate.BankAccounts,
+						}
+						mail.PlainTextBody = plaintextTemplate.MustExec(emailTemplate)
+						mail.HtmlBody = htmlTemplate.MustExec(emailTemplate)
+
 						err := mailSender.Send(mail)
 						if err != nil {
 							log.Error().Err(err).Msgf("failed to send email to %s", user.Email)

@@ -1,5 +1,10 @@
 <script setup>
-import personImage from "@/assets/images/person.jpg"
+import didietImage from "@/assets/images/speaker_didiet.png"
+import elfinoImage from "@/assets/images/speaker_elfino.png";
+import rizaImage from "@/assets/images/speaker_riza.png";
+import gilangImage from "@/assets/images/speaker_gilang.png";
+import mustafaImage from "@/assets/images/speaker_mustafa.png";
+
 const config = useRuntimeConfig()
 useHead({
     title: "Home"
@@ -10,21 +15,25 @@ const speakers = ref([
         name: "Didiet Noor",
         title: "Tanda-Tanda Kamu Punya Skill Issue",
         description: "Developer bisa coding doang itu banyak. Banyak juga yang dilayoff. Saingan kamu banyak kalo cuma bisa coding.",
+        image: didietImage,
     },
     {
         name: "M. Gilang Januar",
         title: "The Business Mind in a Pragmatic Engineer: Building Boring Businesses",
-        description: "Berbicara tentang memiliki side hustle sebagai seorang software engineer. Mulai dari ideation, business and marketing strategy, contoh studi kasus, dan hal menarik lainnya. Harapannya peserta dapat melihat business value dari kacamata seoarang pragmatic engineer.",
+        description: "Berbicara tentang memiliki side hustle sebagai seorang software engineer. Mulai dari ideation, business and marketing strategy, contoh studi kasus, dan hal menarik lainnya. Harapannya peserta dapat melihat business value dari kacamata seorang pragmatic engineer.",
+        image: gilangImage,
     },
     {
         name: "Riza Ramadan",
         title: "Melakukan TDD meski situasi tidak kondusif",
-        description: "Often, 'You're doing TDD wrong' is heard, but usually, TDD is just applied to unsuitable problems. Many do it right, just not for the right reasons. In this talk, we will discuss when it makes sense to use TDD and when it doesn't, regardless of our understanding of how to do TDD."
+        description: "Often, 'You're doing TDD wrong' is heard, but usually, TDD is just applied to unsuitable problems. Many do it right, just not for the right reasons. In this talk, we will discuss when it makes sense to use TDD and when it doesn't, regardless of our understanding of how to do TDD.",
+        image: rizaImage,
     },
     {
         name: "Mustafa Zaki A.",
         title: "Loving Rust not because of the performance",
         description: "Rust dikenal dengan bahasa pemrograman yang cepat. Namun sebenarnya ada sisi lain yang ditawarkan di Rust. Talk kali ini akan membahas apa saja hal yang ditawarkan oleh Rust selain kecepatan.",
+        image: mustafaImage,
     }
 ]) 
 </script>
@@ -42,7 +51,7 @@ const speakers = ref([
                             </h3>
                             <h3 class="text-xl lg:text-3xl flex items-center gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7m0 2a5 5 0 0 0-5 5c0 1 0 3 5 9.71C17 12 17 10 17 9a5 5 0 0 0-5-5Z"/></svg>
-                                <span>Depok, Indonesia</span>
+                                <span>Kode Creative Hub, Depok Town Square<br/>Depok, Indonesia</span>
                             </h3>
                             <Btn :isLink="true" to="register" class="mt-5 lg:mt-15 text-center btn-save-my-spot" size="xl">Save my spot!</Btn>
                         </div>
@@ -72,7 +81,7 @@ const speakers = ref([
                 <h2 class="section-title | mb-24 text-center w-full leading-tight">Speakers</h2>
                 <div class="section-body">
                     <div class="speakers | grid grid-cols-1 lg:grid-cols-4 gap-10">
-                        <Card v-for="speaker in speakers" :key="speaker.name" :image_url="personImage" :title="speaker.name" :description="speaker.description"></Card>
+                        <Card v-for="speaker in speakers" :key="speaker.name" :image_url="speaker.image" :title="speaker.name" :description="speaker.description"></Card>
                     </div>
                 </div>
             </div>
@@ -102,7 +111,7 @@ const speakers = ref([
                             <li>The venue is on your exact left</li>
                           </ol>
                         </Tab>
-                        <Tab name="Ridesharing (Gojek, Grab, Maxim)">
+                        <Tab name="Ridesharing (Gojek, Grab)">
                           <ol>
                             <li>Set your destination either directly to Depok Town Square or Margo City. If Margo City is cheaper for you, you can walk through the pedestrian bridge that connects Margo City to Depok Town Square.</li>
                             <li>From the lobby, go up 1 floor to the UG level</li>

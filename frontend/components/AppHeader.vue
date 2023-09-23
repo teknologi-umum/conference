@@ -8,7 +8,6 @@ function checkWindowSize() {
     showNavbar.value = !isMobile.value
 }
 onMounted(() => {
-    console.log("rstrst")
     // Get screen width
     checkWindowSize()
     window.addEventListener('resize', checkWindowSize)    

@@ -7,7 +7,6 @@ import {QrcodeStream} from 'vue-qrcode-reader'
 const detectedUser = ref()
 const detectedUsers = ref([])
 const onDetect = (a: any) => {
-    console.log(a)
     detectedUser.value = {
         name: 'Aji',
         student: true,

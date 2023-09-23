@@ -2,7 +2,6 @@
 const slots = useSlots()
 
 const activeTab = ref(0)
-console.log(slots.default!())
 const tabItems = slots.default!()
 </script>
 <template>

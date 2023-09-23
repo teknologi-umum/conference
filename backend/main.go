@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net"
@@ -18,6 +19,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/rs/zerolog/log"
+	"gocloud.dev/blob"
 	_ "gocloud.dev/blob/fileblob"
 	_ "gocloud.dev/blob/s3blob"
 )
@@ -25,52 +27,91 @@ import (
 var version string
 
 func App() *cli.App {
-	config, err := GetConfig()
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to get config")
-	}
-
-	err = sentry.Init(sentry.ClientOptions{
-		Dsn:              "",
-		Debug:            config.Environment != "production",
-		AttachStacktrace: true,
-		SampleRate:       1.0,
-		Release:          version,
-		Environment:      config.Environment,
-	})
-	if err != nil {
-		log.Fatal().Err(err).Msg("Initiating sentry")
-	}
-
 	app := &cli.App{
 		Name:           "teknum-conf",
 		Version:        version,
 		Description:    "CLI for working with Teknologi Umum Conference backend",
 		DefaultCommand: "server",
+
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "config-file-path",
+				EnvVars: []string{"CONFIGURATION_FILE"},
+			},
+		},
 		Commands: []*cli.Command{
 			{
 				Name: "server",
 				Action: func(cCtx *cli.Context) error {
+					config, err := GetConfig(cCtx.String("config-file-path"))
+					if err != nil {
+						return fmt.Errorf("failed to get config: %w", err)
+					}
+
+					err = sentry.Init(sentry.ClientOptions{
+						Dsn:              "",
+						Debug:            config.Environment != "production",
+						AttachStacktrace: true,
+						SampleRate:       1.0,
+						Release:          version,
+						Environment:      config.Environment,
+					})
+					if err != nil {
+						return fmt.Errorf("initializing Sentry: %w", err)
+					}
+
 					conn, err := pgxpool.New(
 						context.Background(),
 						fmt.Sprintf(
 							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
-							config.DBUser,
-							config.DBPassword,
-							config.DBHost,
-							config.DBPort,
-							config.DBName,
+							config.Database.User,
+							config.Database.Password,
+							config.Database.Host,
+							config.Database.Port,
+							config.Database.Name,
 						),
 					)
 					if err != nil {
-						log.Fatal().Err(err).Msg("Failed to connect to database")
+						return fmt.Errorf("failed connect to database: %w", err)
 					}
 					defer conn.Close()
 
-					userDomain := NewUserDomain(conn)
+					bucket, err := blob.OpenBucket(context.Background(), config.BlobUrl)
+					if err != nil {
+						return fmt.Errorf("opening bucket: %w", err)
+					}
+					defer func() {
+						err := bucket.Close()
+						if err != nil {
+							log.Warn().Err(err).Msg("Closing bucket")
+						}
+					}()
 
-					e := NewServer(&ServerConfig{
-						UserDomain: userDomain,
+					signaturePrivateKey, err := hex.DecodeString(config.Signature.PrivateKey)
+					if err != nil {
+						return fmt.Errorf("invalid signature private key: %w", err)
+					}
+
+					signaturePublicKey, err := hex.DecodeString(config.Signature.PublicKey)
+					if err != nil {
+						return fmt.Errorf("invalid signature public key: %w", err)
+					}
+
+					mailer := NewMailSender(&MailConfiguration{
+						SmtpHostname: config.Mailer.Hostname,
+						SmtpPort:     config.Mailer.Port,
+						SmtpFrom:     config.Mailer.From,
+						SmtpPassword: config.Mailer.Password,
+					})
+
+					ticketDomain, err := NewTicketDomain(conn, bucket, signaturePrivateKey, signaturePublicKey, mailer)
+					if err != nil {
+						return fmt.Errorf("creating ticket domain: %w", err)
+					}
+
+					httpServer := NewServer(&ServerConfig{
+						UserDomain:   NewUserDomain(conn),
+						TicketDomain: ticketDomain,
 					})
 
 					exitSig := make(chan os.Signal, 1)
@@ -81,13 +122,13 @@ func App() *cli.App {
 						ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 						defer cancel()
 
-						if err := e.Shutdown(ctx); err != nil {
-							log.Error().Err(err).Msg("Failed to shutdown server")
+						if err := httpServer.Shutdown(ctx); err != nil {
+							log.Error().Err(err).Msg("failed to shutdown server")
 						}
 					}()
 
-					if err := e.Start(net.JoinHostPort("", config.Port)); err != nil && !errors.Is(err, http.ErrServerClosed) {
-						log.Fatal().Err(err).Msg("Failed to start server")
+					if err := httpServer.Start(net.JoinHostPort("", config.Port)); err != nil && !errors.Is(err, http.ErrServerClosed) {
+						log.Fatal().Err(err).Msg("failed to start server")
 					}
 
 					return nil
@@ -96,15 +137,32 @@ func App() *cli.App {
 			{
 				Name: "migrate",
 				Action: func(cCtx *cli.Context) error {
+					config, err := GetConfig(cCtx.String("config-file-path"))
+					if err != nil {
+						return fmt.Errorf("failed to get config: %w", err)
+					}
+
+					err = sentry.Init(sentry.ClientOptions{
+						Dsn:              "",
+						Debug:            config.Environment != "production",
+						AttachStacktrace: true,
+						SampleRate:       1.0,
+						Release:          version,
+						Environment:      config.Environment,
+					})
+					if err != nil {
+						return fmt.Errorf("initializing Sentry: %w", err)
+					}
+
 					conn, err := sql.Open(
 						"pgx",
 						fmt.Sprintf(
 							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
-							config.DBUser,
-							config.DBPassword,
-							config.DBHost,
-							config.DBPort,
-							config.DBName,
+							config.Database.User,
+							config.Database.Password,
+							config.Database.Host,
+							config.Database.Port,
+							config.Database.Name,
 						))
 					if err != nil {
 						return fmt.Errorf("failed to connect to database: %w", err)
@@ -120,18 +178,19 @@ func App() *cli.App {
 					if err != nil {
 						return fmt.Errorf("failed to create migration: %w", err)
 					}
+
 					switch cCtx.Args().First() {
 					case "down":
 						err := migration.Down(cCtx.Context)
 						if err != nil {
-							return fmt.Errorf("Executing down migration: %w", err)
+							return fmt.Errorf("executing down migration: %w", err)
 						}
 					case "up":
 						fallthrough
 					default:
 						err := migration.Up(cCtx.Context)
 						if err != nil {
-							return fmt.Errorf("Executing up migration: %w", err)
+							return fmt.Errorf("executing up migration: %w", err)
 						}
 					}
 
@@ -143,51 +202,47 @@ func App() *cli.App {
 			{
 				Name: "dump-attendees",
 				Action: func(cCtx *cli.Context) error {
+					config, err := GetConfig(cCtx.String("config-file-path"))
+					if err != nil {
+						return fmt.Errorf("failed to get config: %w", err)
+					}
+
+					err = sentry.Init(sentry.ClientOptions{
+						Dsn:              "",
+						Debug:            config.Environment != "production",
+						AttachStacktrace: true,
+						SampleRate:       1.0,
+						Release:          version,
+						Environment:      config.Environment,
+					})
+					if err != nil {
+						return fmt.Errorf("initializing Sentry: %w", err)
+					}
+
 					conn, err := pgxpool.New(
-						context.Background(),
+						cCtx.Context,
 						fmt.Sprintf(
 							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
-							config.DBUser,
-							config.DBPassword,
-							config.DBHost,
-							config.DBPort,
-							config.DBName,
+							config.Database.User,
+							config.Database.Password,
+							config.Database.Host,
+							config.Database.Port,
+							config.Database.Name,
 						),
 					)
 					if err != nil {
-						log.Fatal().Err(err).Msg("Failed to connect to database")
+						log.Fatal().Err(err).Msg("failed to connect to database")
 					}
 					defer conn.Close()
 
 					userDomain := NewUserDomain(conn)
 
-					err = userDomain.ExportUnprocessedUsersAsCSV(cCtx.Context)
-					return err
+					return userDomain.ExportUnprocessedUsersAsCSV(cCtx.Context)
 				},
 			},
 			{
 				Name: "blast-email",
 				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "smtp.hostname",
-						Value: "",
-						Usage: "SMTP hostname",
-					},
-					&cli.StringFlag{
-						Name:  "smtp.port",
-						Value: "",
-						Usage: "SMTP port",
-					},
-					&cli.StringFlag{
-						Name:  "smtp.from",
-						Value: "admin@localhost",
-						Usage: "SMTP sender email",
-					},
-					&cli.StringFlag{
-						Name:  "smtp.password",
-						Value: "",
-						Usage: "SMTP password",
-					},
 					&cli.StringFlag{
 						Name:     "subject",
 						Value:    "",
@@ -221,10 +276,23 @@ func App() *cli.App {
 				Usage:     "blast-email [subject] [template-plaintext] [template-html-body] [csv-file list destination of emails]",
 				ArgsUsage: "[subject] [template-plaintext] [template-html-body] [path-csv-file]",
 				Action: func(cCtx *cli.Context) error {
-					smtpHostname := cCtx.String("smtp.hostname")
-					smtpPort := cCtx.String("smtp.port")
-					smtpFrom := cCtx.String("smtp.from")
-					smtpPassword := cCtx.String("smtp.password")
+					config, err := GetConfig(cCtx.String("config-file-path"))
+					if err != nil {
+						return fmt.Errorf("failed to get config: %w", err)
+					}
+
+					err = sentry.Init(sentry.ClientOptions{
+						Dsn:              "",
+						Debug:            config.Environment != "production",
+						AttachStacktrace: true,
+						SampleRate:       1.0,
+						Release:          version,
+						Environment:      config.Environment,
+					})
+					if err != nil {
+						return fmt.Errorf("initializing Sentry: %w", err)
+					}
+
 					subject := cCtx.String("subject")
 					plaintext := cCtx.String("plaintext-body")
 					htmlBody := cCtx.String("html-body")
@@ -246,22 +314,22 @@ func App() *cli.App {
 
 					plaintextContent, err := os.ReadFile(plaintext)
 					if err != nil {
-						log.Fatal().Err(err).Msg("Failed to read plaintext template")
+						log.Fatal().Err(err).Msg("failed to read plaintext template")
 					}
 
 					plaintextTemplate, err := handlebars.Parse(string(plaintextContent))
 					if err != nil {
-						log.Fatal().Err(err).Msg("Failed to parse plaintext template")
+						log.Fatal().Err(err).Msg("failed to parse plaintext template")
 					}
 
 					htmlContent, err := os.ReadFile(htmlBody)
 					if err != nil {
-						log.Fatal().Err(err).Msg("Failed to read html template")
+						log.Fatal().Err(err).Msg("failed to read html template")
 					}
 
 					htmlTemplate, err := handlebars.Parse(string(htmlContent))
 					if err != nil {
-						log.Fatal().Err(err).Msg("Failed to parse html template")
+						log.Fatal().Err(err).Msg("failed to parse html template")
 					}
 
 					var userList []User
@@ -269,12 +337,12 @@ func App() *cli.App {
 					if mailCsv != "" {
 						emailList, err := os.ReadFile(mailCsv)
 						if err != nil {
-							log.Fatal().Err(err).Msg("Failed to read email list")
+							log.Fatal().Err(err).Msg("failed to read email list")
 						}
 
-						userList, err = csvReader(string(emailList))
+						userList, err = csvReader(string(emailList), true)
 						if err != nil {
-							log.Fatal().Err(err).Msg("Failed to parse email list")
+							log.Fatal().Err(err).Msg("failed to parse email list")
 						}
 					} else {
 						userList = append(userList, User{
@@ -283,10 +351,10 @@ func App() *cli.App {
 					}
 
 					mailSender := NewMailSender(&MailConfiguration{
-						SmtpHostname: smtpHostname,
-						SmtpPort:     smtpPort,
-						SmtpFrom:     smtpFrom,
-						SmtpPassword: smtpPassword,
+						SmtpHostname: config.Mailer.Hostname,
+						SmtpPort:     config.Mailer.Port,
+						SmtpFrom:     config.Mailer.From,
+						SmtpPassword: config.Mailer.Password,
 					})
 
 					for _, user := range userList {
@@ -306,7 +374,7 @@ func App() *cli.App {
 
 						err := mailSender.Send(mail)
 						if err != nil {
-							log.Error().Err(err).Msgf("Failed to send email to %s", user.Email)
+							log.Error().Err(err).Msgf("failed to send email to %s", user.Email)
 							continue
 						}
 
@@ -328,17 +396,34 @@ func App() *cli.App {
 					},
 				},
 				Action: func(cCtx *cli.Context) error {
+					config, err := GetConfig(cCtx.String("config-file-path"))
+					if err != nil {
+						return fmt.Errorf("failed to get config: %w", err)
+					}
+
+					err = sentry.Init(sentry.ClientOptions{
+						Dsn:              "",
+						Debug:            config.Environment != "production",
+						AttachStacktrace: true,
+						SampleRate:       1.0,
+						Release:          version,
+						Environment:      config.Environment,
+					})
+					if err != nil {
+						return fmt.Errorf("initializing Sentry: %w", err)
+					}
+
 					isProcessedStr := cCtx.Bool("is_processed")
 
 					conn, err := pgxpool.New(
-						context.Background(),
+						cCtx.Context,
 						fmt.Sprintf(
 							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
-							config.DBUser,
-							config.DBPassword,
-							config.DBHost,
-							config.DBPort,
-							config.DBName,
+							config.Database.User,
+							config.Database.Password,
+							config.Database.Host,
+							config.Database.Port,
+							config.Database.Name,
 						),
 					)
 					if err != nil {
@@ -346,8 +431,8 @@ func App() *cli.App {
 					}
 					defer conn.Close()
 
-					UserDomain := NewUserDomain(conn)
-					users, err := UserDomain.GetUsers(cCtx.Context, UserFilterRequest{Type: TypeParticipant, IsProcessed: isProcessedStr})
+					userDomain := NewUserDomain(conn)
+					users, err := userDomain.GetUsers(cCtx.Context, UserFilterRequest{Type: TypeParticipant, IsProcessed: isProcessedStr})
 					if err != nil {
 						return err
 					}
@@ -360,37 +445,124 @@ func App() *cli.App {
 					return nil
 				},
 			},
-		},
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "config",
-				Value:       config.DBName,
-				Usage:       "db name",
-				Destination: &config.DBName,
-			},
-			&cli.StringFlag{
-				Name:        "db-user",
-				Value:       config.DBUser,
-				Usage:       "db user",
-				Destination: &config.DBUser,
-			},
-			&cli.StringFlag{
-				Name:        "db-password",
-				Value:       config.DBPassword,
-				Usage:       "db password",
-				Destination: &config.DBPassword,
-			},
-			&cli.StringFlag{
-				Name:        "db-host",
-				Value:       config.DBHost,
-				Usage:       "db host",
-				Destination: &config.DBHost,
-			},
-			&cli.StringFlag{
-				Name:        "port",
-				Value:       config.Port,
-				Usage:       "port",
-				Destination: &config.Port,
+			{
+				Name:      "student-verification",
+				Usage:     "student-verification [path-csv-file]",
+				ArgsUsage: "[path-csv-file]",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "bulk-verification",
+						Value:    "",
+						Required: false,
+					},
+					&cli.StringFlag{
+						Name:     "single-verification",
+						Value:    "",
+						Required: false,
+					},
+				},
+				Action: func(cCtx *cli.Context) error {
+					config, err := GetConfig(cCtx.String("config-file-path"))
+					if err != nil {
+						return fmt.Errorf("failed to get config: %w", err)
+					}
+
+					err = sentry.Init(sentry.ClientOptions{
+						Dsn:              "",
+						Debug:            config.Environment != "production",
+						AttachStacktrace: true,
+						SampleRate:       1.0,
+						Release:          version,
+						Environment:      config.Environment,
+					})
+					if err != nil {
+						return fmt.Errorf("initializing Sentry: %w", err)
+					}
+
+					bulkVerification := cCtx.String("bulk-verification")
+					singleVerification := cCtx.String("single-verification")
+
+					if bulkVerification == "" && singleVerification == "" {
+						return fmt.Errorf("requires `--bulk-verification` or `--single-verification` flag")
+					}
+
+					var students []User
+					if bulkVerification != "" {
+						emailList, err := os.ReadFile(bulkVerification)
+						if err != nil {
+							log.Fatal().Err(err).Msg("failed to read email list")
+						}
+
+						students, err = csvReader(string(emailList), false)
+						if err != nil {
+							log.Fatal().Err(err).Msg("failed to parse email list")
+						}
+					} else {
+						students = append(students, User{
+							Email: singleVerification,
+						})
+					}
+
+					bucket, err := blob.OpenBucket(context.Background(), config.BlobUrl)
+					if err != nil {
+						return fmt.Errorf("opening bucket: %w", err)
+					}
+					defer func() {
+						err := bucket.Close()
+						if err != nil {
+							log.Warn().Err(err).Msg("Closing bucket")
+						}
+					}()
+
+					signaturePrivateKey, err := hex.DecodeString(config.Signature.PrivateKey)
+					if err != nil {
+						return fmt.Errorf("invalid signature private key: %w", err)
+					}
+
+					signaturePublicKey, err := hex.DecodeString(config.Signature.PublicKey)
+					if err != nil {
+						return fmt.Errorf("invalid signature public key: %w", err)
+					}
+
+					mailer := NewMailSender(&MailConfiguration{
+						SmtpHostname: config.Mailer.Hostname,
+						SmtpPort:     config.Mailer.Port,
+						SmtpFrom:     config.Mailer.From,
+						SmtpPassword: config.Mailer.Password,
+					})
+
+					conn, err := pgxpool.New(
+						cCtx.Context,
+						fmt.Sprintf(
+							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
+							config.Database.User,
+							config.Database.Password,
+							config.Database.Host,
+							config.Database.Port,
+							config.Database.Name,
+						),
+					)
+					if err != nil {
+						return fmt.Errorf("failed to connect to database: %w", err)
+					}
+
+					ticketDomain, err := NewTicketDomain(conn, bucket, signaturePrivateKey, signaturePublicKey, mailer)
+					if err != nil {
+						return fmt.Errorf("creating a ticket domain instance: %s", err.Error())
+					}
+
+					for _, student := range students {
+						err := ticketDomain.VerifyIsStudent(cCtx.Context, student.Email)
+						if err != nil {
+							log.Error().Err(err).Msgf("failed to verify student %s", student.Email)
+							continue
+						}
+
+						log.Info().Msgf("Verified student %s", student.Email)
+					}
+
+					return nil
+				},
 			},
 		},
 		Copyright: `   Copyright 2023 Teknologi Umum
@@ -413,6 +585,6 @@ func App() *cli.App {
 
 func main() {
 	if err := App().Run(os.Args); err != nil {
-		log.Fatal().Err(err).Msg("Failed to run app")
+		log.Fatal().Err(err).Msg("failed to run app")
 	}
 }

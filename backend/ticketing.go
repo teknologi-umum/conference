@@ -32,7 +32,7 @@ type TicketDomain struct {
 	mailer     *Mailer
 }
 
-func NewTicketDomain(db *pgxpool.Pool, bucket *blob.Bucket, privateKey *ed25519.PrivateKey, publicKey *ed25519.PublicKey, mailer *Mailer) (*TicketDomain, error) {
+func NewTicketDomain(db *pgxpool.Pool, bucket *blob.Bucket, privateKey ed25519.PrivateKey, publicKey ed25519.PublicKey, mailer *Mailer) (*TicketDomain, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
@@ -56,8 +56,8 @@ func NewTicketDomain(db *pgxpool.Pool, bucket *blob.Bucket, privateKey *ed25519.
 	return &TicketDomain{
 		db:         db,
 		bucket:     bucket,
-		privateKey: privateKey,
-		publicKey:  publicKey,
+		privateKey: &privateKey,
+		publicKey:  &publicKey,
 		mailer:     mailer,
 	}, nil
 }
@@ -393,4 +393,38 @@ func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (ok boo
 	}
 
 	return true, student, nil
+}
+
+func (t *TicketDomain) VerifyIsStudent(ctx context.Context, email string) (err error) {
+	if email == "" {
+		return ValidationError{Errors: []string{"email is empty"}}
+	}
+
+	c, err := t.db.Acquire(ctx)
+	if err != nil {
+		return
+	}
+	defer c.Release()
+
+	tx, err := c.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
+	if err != nil {
+		return
+	}
+
+	_, err = tx.Exec(ctx, "UPDATE ticketing SET student = TRUE WHERE email = $1", email)
+	if err != nil {
+		if e := tx.Rollback(ctx); e != nil {
+			err = e
+			return
+		}
+
+		return
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return
+	}
+
+	return nil
 }

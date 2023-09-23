@@ -8,8 +8,8 @@ const tabItems = slots.default!()
 <template>
     <div class="tabs">
         <div class="tab-header flex">
-            <a href="#" 
-            :class="`tab-title cursor-pointer text-gray-500 hover:text-white  p-3 ${activeTab == i ? 'active' : ''}`" 
+            <a 
+            :class="`tab-title cursor-pointer text-gray-500 hover:text-white text-left  p-3 ${activeTab == i ? 'active' : ''}`" 
             v-for="(item, i) in tabItems"
             @click.prevent="activeTab = i">
             

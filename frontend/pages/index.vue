@@ -97,13 +97,10 @@ const speakers = ref([
             </div>
         </section>
         <section id="venue" class="section relative">
-            <div class="container | mx-auto px-5 lg:flex ">
-                <div class="section-left text-center mb-16 lg:w-1/2">
-                    <h2 class="section-title mb-8">How to get to venue</h2>
+            <div class="container | mx-auto px-5 lg:flex  lg:w-1/2">
+                <div class="section-left text-center mb-16">
+                    <h2 class="section-title leading-normal mb-8">How to get to venue</h2>
                     <HowToVenue/>
-                </div>
-                <div class="section-right flex justify-center">
-                    <img src="/detos.jpg" id="img-venue">
                 </div>
             </div>
         </section>

@@ -8,15 +8,15 @@ import (
 	"slices"
 
 	sentryecho "github.com/getsentry/sentry-go/echo"
-	"github.com/rs/zerolog/log"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/rs/zerolog/log"
 )
 
 type ServerConfig struct {
 	UserDomain   *UserDomain
 	TicketDomain *TicketDomain
+	Environment  string
 }
 
 type ServerDependency struct {
@@ -45,8 +45,12 @@ func NewServer(config *ServerConfig) *echo.Echo {
 	e.Use(sentryMiddleware)
 
 	// NOTE: Only need to handle CORS, everything else is being handled by the API gateway
+	corsAllowedOrigins := []string{"https://conf.teknologiumum.com"}
+	if config.Environment != "production" {
+		corsAllowedOrigins = append(corsAllowedOrigins, "http://localhost:3000")
+	}
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins:     []string{"https://conf.teknologiumum.com"},
+		AllowOrigins:     corsAllowedOrigins,
 		AllowMethods:     []string{http.MethodPost},
 		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 		AllowCredentials: false,
@@ -116,7 +120,15 @@ func (s *ServerDependency) UploadBuktiTransfer(c echo.Context) error {
 	sentryHub := sentryecho.GetHubFromContext(c)
 	sentryHub.Scope().SetTag("request-id", requestId)
 
-	email := c.FormValue("email")
+	if err := c.Request().ParseMultipartForm(32 << 10); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message":    "Parsing error",
+			"errors":     err.Error(),
+			"request_id": requestId,
+		})
+	}
+
+	email := c.Request().FormValue("email")
 	if email == "" {
 		return c.JSON(http.StatusBadRequest, echo.Map{
 			"message":    "Validation error",
@@ -124,7 +136,8 @@ func (s *ServerDependency) UploadBuktiTransfer(c echo.Context) error {
 			"request_id": requestId,
 		})
 	}
-	photoFormFile, err := c.FormFile("photo")
+
+	photoFile, photoFormHeader, err := c.Request().FormFile("photo")
 	if err != nil {
 		if errors.Is(err, http.ErrMissingFile) {
 			return c.JSON(http.StatusBadRequest, echo.Map{
@@ -141,8 +154,14 @@ func (s *ServerDependency) UploadBuktiTransfer(c echo.Context) error {
 			"request_id": requestId,
 		})
 	}
+	defer func() {
+		err := photoFile.Close()
+		if err != nil {
+			log.Error().Err(err).Str("request_id", requestId).Msg("Closing photo file")
+		}
+	}()
 
-	photoExtension := path.Ext(photoFormFile.Filename)
+	photoExtension := path.Ext(photoFormHeader.Filename)
 	// Guard the content type, the only content type allowed is images.
 	if !slices.Contains([]string{".gif", ".jpeg", ".jpg", ".png", ".webp"}, photoExtension) {
 		return c.JSON(http.StatusBadRequest, echo.Map{
@@ -153,22 +172,6 @@ func (s *ServerDependency) UploadBuktiTransfer(c echo.Context) error {
 	}
 
 	photoContentType := mime.TypeByExtension(photoExtension)
-
-	photoFile, err := photoFormFile.Open()
-	if err != nil {
-		sentryHub.CaptureException(err)
-		return c.JSON(http.StatusBadRequest, echo.Map{
-			"message":    "Opening photo file",
-			"errors":     err.Error(),
-			"request_id": requestId,
-		})
-	}
-	defer func() {
-		err := photoFile.Close()
-		if err != nil {
-			log.Error().Err(err).Str("request_id", requestId).Msg("Closing photo file")
-		}
-	}()
 
 	err = s.ticketDomain.StorePaymentReceipt(c.Request().Context(), email, photoFile, photoContentType)
 	if err != nil {

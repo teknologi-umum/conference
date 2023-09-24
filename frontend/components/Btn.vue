@@ -27,7 +27,7 @@ const classes = computed(() => `btn btn-${props.color} btn-${props.size} inline-
     <router-link :to="to!" :class="classes" v-if="isLink">
         <slot></slot>
     </router-link>
-    <button :class="classes" v-else>
+    <button :class="classes" v-else @click="$emit('click')">
         <slot></slot>
     </button>
 </template>

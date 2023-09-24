@@ -1,5 +1,10 @@
 <script setup>
-import personImage from "@/assets/images/person.jpg"
+import didietImage from "@/assets/images/speaker_didiet.png"
+import elfinoImage from "@/assets/images/speaker_elfino.png";
+import rizaImage from "@/assets/images/speaker_riza.png";
+import gilangImage from "@/assets/images/speaker_gilang.png";
+import mustafaImage from "@/assets/images/speaker_mustafa.png";
+
 const config = useRuntimeConfig()
 useHead({
     title: "Home"
@@ -10,21 +15,25 @@ const speakers = ref([
         name: "Didiet Noor",
         title: "Tanda-Tanda Kamu Punya Skill Issue",
         description: "Developer bisa coding doang itu banyak. Banyak juga yang dilayoff. Saingan kamu banyak kalo cuma bisa coding.",
+        image: didietImage,
     },
     {
         name: "M. Gilang Januar",
-        title: "The Business Mind in a Pragmatic Engineer: Building Boring Businesses",
-        description: "belom ada",
+        title: "The Business Mind in a Pragmatic Engineer: Building Boring Businesses",
+        description: "Berbicara tentang memiliki side hustle sebagai seorang software engineer. Mulai dari ideation, business and marketing strategy, contoh studi kasus, dan hal menarik lainnya. Harapannya peserta dapat melihat business value dari kacamata seorang pragmatic engineer.",
+        image: gilangImage,
     },
     {
         name: "Riza Ramadan",
         title: "Melakukan TDD meski situasi tidak kondusif",
-        description: "Often, 'You're doing TDD wrong' is heard, but usually, TDD is just applied to unsuitable problems. Many do it right, just not for the right reasons. In this talk, we will discuss when it makes sense to use TDD and when it doesn't, regardless of our understanding of how to do TDD."
+        description: "Often, 'You're doing TDD wrong' is heard, but usually, TDD is just applied to unsuitable problems. Many do it right, just not for the right reasons. In this talk, we will discuss when it makes sense to use TDD and when it doesn't, regardless of our understanding of how to do TDD.",
+        image: rizaImage,
     },
     {
         name: "Mustafa Zaki A.",
         title: "Loving Rust not because of the performance",
         description: "Rust dikenal dengan bahasa pemrograman yang cepat. Namun sebenarnya ada sisi lain yang ditawarkan di Rust. Talk kali ini akan membahas apa saja hal yang ditawarkan oleh Rust selain kecepatan.",
+        image: mustafaImage,
     }
 ]) 
 </script>
@@ -42,7 +51,7 @@ const speakers = ref([
                             </h3>
                             <h3 class="text-xl lg:text-3xl flex items-center gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5M12 2a7 7 0 0 1 7 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 0 1 7-7m0 2a5 5 0 0 0-5 5c0 1 0 3 5 9.71C17 12 17 10 17 9a5 5 0 0 0-5-5Z"/></svg>
-                                <span>Depok, Indonesia</span>
+                                <span>Kode Creative Hub, Depok Town Square<br/>Depok, Indonesia</span>
                             </h3>
                             <Btn :isLink="true" to="register" class="mt-5 lg:mt-15 text-center btn-save-my-spot" size="xl">Save my spot!</Btn>
                         </div>
@@ -72,8 +81,26 @@ const speakers = ref([
                 <h2 class="section-title | mb-24 text-center w-full leading-tight">Speakers</h2>
                 <div class="section-body">
                     <div class="speakers | grid grid-cols-1 lg:grid-cols-4 gap-10">
-                        <Card v-for="speaker in speakers" :key="speaker.name" :image_url="personImage" :title="speaker.name" :description="speaker.description"></Card>
+                        <Card v-for="speaker in speakers" :key="speaker.name" :image_url="speaker.image" :title="speaker.name" :description="speaker.description"></Card>
                     </div>
+                </div>
+            </div>
+        </section>
+        <section id="rundown" class="section">
+            <div class="container | mx-auto px-5 lg:flex">
+                <div class="section-header text-center mb-16 lg:w-1/2">
+                    <h2 class="section-title rundown-title">Rundown</h2>
+                </div>
+                <div class="section-content flex justify-center">
+                    <Rundown></Rundown>
+                </div>
+            </div>
+        </section>
+        <section id="venue" class="section relative">
+            <div class="container | mx-auto px-5 lg:flex  lg:w-1/2">
+                <div class="section-left text-center mb-16">
+                    <h2 class="section-title leading-normal mb-8">How to get to venue</h2>
+                    <HowToVenue/>
                 </div>
             </div>
         </section>
@@ -118,5 +145,38 @@ const speakers = ref([
     padding: 2rem 1rem;
     font-size: 1.3rem;
     border-bottom: 1px solid #ffffff5b;
+}
+@media screen and (min-width: 1024px) {
+    .rundown-title {
+        writing-mode: vertical-lr;
+        text-orientation:mixed;
+        font-size: clamp(6rem, 10vw, 9rem);
+        text-align: right;
+        transform: rotateZ(180deg);
+    }
+    #rundown .section-header {
+        justify-content: flex-end;
+        display: flex;
+        padding: 0 3rem;
+    }
+}
+#venue {
+    background: linear-gradient(120deg, rgba(1, 2, 15, 0.883),
+                    rgba(0, 0, 0, 0.95), 
+                    rgba(5, 12, 34, 0.879)),
+                url('@/assets/images/venue.jpg') no-repeat;
+    background-size: cover;
+    padding: 3rem 0;
+    backdrop-filter: blur(1rem);
+    min-height: 500px;
+    line-height: 2rem;
+}
+#img-venue {
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40%;
+    height: 100%;
 }
 </style>

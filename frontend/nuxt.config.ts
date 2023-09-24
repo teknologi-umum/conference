@@ -25,11 +25,11 @@ export default defineNuxtConfig({
   modules: [
     '@unocss/nuxt',
     '@nuxtjs/google-fonts',
-    "@model-w/sentry"
+    // "@model-w/sentry"
   ],
-  sentry: {
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.SENTRY_ENVIRONMENT
-  },
+  // sentry: {
+  //   dsn: process.env.SENTRY_DSN,
+  //   environment: process.env.SENTRY_ENVIRONMENT
+  // },
   devtools: { enabled: true },
 })

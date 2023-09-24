@@ -55,6 +55,14 @@ func App() *cli.App {
 						SampleRate:       1.0,
 						Release:          version,
 						Environment:      config.Environment,
+						DebugWriter:      log.Logger,
+						BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+							if config.Environment != "production" {
+								log.Debug().Interface("exceptions", event.Exception).Msg(event.Message)
+							}
+
+							return event
+						},
 					})
 					if err != nil {
 						return fmt.Errorf("initializing Sentry: %w", err)
@@ -112,6 +120,7 @@ func App() *cli.App {
 					httpServer := NewServer(&ServerConfig{
 						UserDomain:   NewUserDomain(conn),
 						TicketDomain: ticketDomain,
+						Environment:  config.Environment,
 					})
 
 					exitSig := make(chan os.Signal, 1)
@@ -149,6 +158,14 @@ func App() *cli.App {
 						SampleRate:       1.0,
 						Release:          version,
 						Environment:      config.Environment,
+						DebugWriter:      log.Logger,
+						BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+							if config.Environment != "production" {
+								log.Debug().Interface("exceptions", event.Exception).Msg(event.Message)
+							}
+
+							return event
+						},
 					})
 					if err != nil {
 						return fmt.Errorf("initializing Sentry: %w", err)
@@ -214,6 +231,14 @@ func App() *cli.App {
 						SampleRate:       1.0,
 						Release:          version,
 						Environment:      config.Environment,
+						DebugWriter:      log.Logger,
+						BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+							if config.Environment != "production" {
+								log.Debug().Interface("exceptions", event.Exception).Msg(event.Message)
+							}
+
+							return event
+						},
 					})
 					if err != nil {
 						return fmt.Errorf("initializing Sentry: %w", err)
@@ -288,6 +313,14 @@ func App() *cli.App {
 						SampleRate:       1.0,
 						Release:          version,
 						Environment:      config.Environment,
+						DebugWriter:      log.Logger,
+						BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+							if config.Environment != "production" {
+								log.Debug().Interface("exceptions", event.Exception).Msg(event.Message)
+							}
+
+							return event
+						},
 					})
 					if err != nil {
 						return fmt.Errorf("initializing Sentry: %w", err)
@@ -424,6 +457,14 @@ func App() *cli.App {
 						SampleRate:       1.0,
 						Release:          version,
 						Environment:      config.Environment,
+						DebugWriter:      log.Logger,
+						BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+							if config.Environment != "production" {
+								log.Debug().Interface("exceptions", event.Exception).Msg(event.Message)
+							}
+
+							return event
+						},
 					})
 					if err != nil {
 						return fmt.Errorf("initializing Sentry: %w", err)
@@ -490,6 +531,14 @@ func App() *cli.App {
 						SampleRate:       1.0,
 						Release:          version,
 						Environment:      config.Environment,
+						DebugWriter:      log.Logger,
+						BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+							if config.Environment != "production" {
+								log.Debug().Interface("exceptions", event.Exception).Msg(event.Message)
+							}
+
+							return event
+						},
 					})
 					if err != nil {
 						return fmt.Errorf("initializing Sentry: %w", err)

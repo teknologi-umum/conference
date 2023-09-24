@@ -16,10 +16,7 @@ const submit = async () => {
 
     // TODO: change endpoint to the correct one
     const response = await useFetch(`${config.public.backendBaseUrl}/bukti-transfer`, { 
-        method: "POST", 
-        headers: {
-            'Content-Type': 'multipart/form-data'
-        },
+        method: "POST",
         body: formData
     });
     alert.type = 'success'

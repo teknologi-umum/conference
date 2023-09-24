@@ -13,22 +13,24 @@ type Config struct {
 	Database struct {
 		Host     string `yaml:"host" envconfig:"DB_HOST" default:"localhost"`
 		Port     uint16 `yaml:"port" envconfig:"DB_PORT" default:"5432"`
-		User     string `yaml:"user" envconfig:"DB_USER" default:"postgres"`
-		Password string `yaml:"password" envconfig:"DB_PASSWORD" default:"postgres"`
-		Name     string `yaml:"database" envconfig:"DB_NAME" default:"postgres"`
+		User     string `yaml:"user" envconfig:"DB_USER" default:"conference"`
+		Password string `yaml:"password" envconfig:"DB_PASSWORD" default:"VeryStrongPassword"`
+		Name     string `yaml:"database" envconfig:"DB_NAME" default:"conference"`
 	} `yaml:"database"`
-	Environment string `yaml:"environment" envconfig:"ENVIRONMENT" default:"production"`
+	Environment string `yaml:"environment" envconfig:"ENVIRONMENT" default:"local"`
 	Port        string `yaml:"port" envconfig:"PORT" default:"8080"`
 	Mailer      struct {
-		Hostname string `yaml:"hostname" envconfig:"SMTP_HOSTNAME"`
-		Port     string `yaml:"port" envconfig:"SMTP_PORT"`
+		Hostname string `yaml:"hostname" envconfig:"SMTP_HOSTNAME" default:"localhost"`
+		Port     string `yaml:"port" envconfig:"SMTP_PORT" default:"1025"`
 		From     string `yaml:"from" envconfig:"SMTP_FROM"`
 		Password string `yaml:"password" envconfig:"SMTP_PASSWORD"`
 	} `yaml:"mailer"`
-	BlobUrl   string `yaml:"blob_url" envconfig:"BLOB_URL" default:"file:///data/"`
+	BlobUrl string `yaml:"blob_url" envconfig:"BLOB_URL" default:"file:///tmp/"`
+	// The default value for these is safe to use for local environment.
+	// The code to generate the keys is available here: https://go.dev/play/p/FNe2KGmgc1_f
 	Signature struct {
-		PublicKey  string `yaml:"public_key" envconfig:"SIGNATURE_PUBLIC_KEY"`
-		PrivateKey string `yaml:"private_key" envconfig:"SIGNATURE_PRIVATE_KEY"`
+		PublicKey  string `yaml:"public_key" envconfig:"SIGNATURE_PUBLIC_KEY" default:"b0598b81d98ada39a2d2d2d79a855ef9b56444954bdf59edf5979c6ef5a3eca0"`
+		PrivateKey string `yaml:"private_key" envconfig:"SIGNATURE_PRIVATE_KEY" default:"82538826d574ba6d85a4c00ba1fc1a202e58397e8f102ff1931d699b6aca1aa3b0598b81d98ada39a2d2d2d79a855ef9b56444954bdf59edf5979c6ef5a3eca0"`
 	} `yaml:"signature"`
 	EmailTemplate struct {
 		TicketPrice                         string `yaml:"ticket_price" envconfig:"EMAIL_TEMPLATE_TICKET_PRICE"`

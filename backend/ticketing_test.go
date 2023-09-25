@@ -115,6 +115,23 @@ func TestTicketDomain_StorePaymentReceipt(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
 
+		// First attempt
+		err := ticketDomain.StorePaymentReceipt(ctx, "johndoe+update@example.com", strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."), "text/plain")
+		if err != nil {
+			t.Errorf("unexpected error: %s", err.Error())
+		}
+
+		// Second attempt, should not return error
+		err = ticketDomain.StorePaymentReceipt(ctx, "johndoe+update@example.com", strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."), "text/plain")
+		if err != nil {
+			t.Errorf("unexpected error: %s", err.Error())
+		}
+	})
+
+	t.Run("Update data if email already exists", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+
 		err := ticketDomain.StorePaymentReceipt(ctx, "johndoe+happy@example.com", strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."), "text/plain")
 		if err != nil {
 			t.Errorf("unexpected error: %s", err.Error())

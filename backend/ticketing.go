@@ -115,7 +115,8 @@ func (t *TicketDomain) StorePaymentReceipt(ctx context.Context, email string, ph
 
 	_, err = tx.Exec(
 		ctx,
-		`INSERT INTO ticketing (id, email, receipt_photo_path) VALUES ($1, $2, $3)`,
+		`INSERT INTO ticketing (id, email, receipt_photo_path) VALUES ($1, $2, $3)
+		ON CONFLICT (email) DO UPDATE SET receipt_photo_path = $3, updated_at = NOW()`,
 		uuid.New(),
 		email,
 		blobKey)

@@ -399,11 +399,6 @@ func App() *cli.App {
 							HtmlBody:       string(htmlContent),
 						}
 
-						// Execute handlebars template only if user.Name is not empty
-						if user.Name != "" {
-							mail.PlainTextBody = plaintextTemplate.MustExec(map[string]any{"name": user.Name})
-							mail.HtmlBody = htmlTemplate.MustExec(map[string]any{"name": user.Name})
-						}
 
 						// Parse email template information
 						emailTemplate := map[string]any{
@@ -417,6 +412,11 @@ func App() *cli.App {
 							"conferenceEmail":                     config.EmailTemplate.ConferenceEmail,
 							"bankAccounts":                        config.EmailTemplate.BankAccounts,
 						}
+						// Execute handlebars template only if user.Name is not empty
+						if user.Name != "" {
+							emailTemplate["name"] = user.Name
+						}
+
 
 						mail.PlainTextBody = plaintextTemplate.MustExec(emailTemplate)
 						mail.HtmlBody = htmlTemplate.MustExec(emailTemplate)

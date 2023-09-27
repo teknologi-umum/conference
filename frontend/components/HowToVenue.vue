@@ -47,8 +47,8 @@ const showWheelchair = ref(false)
     <div class="card card-translucent mb-3" v-show="showWheelchair" id="wheelchair-card">
         <h3 class="mb-3">Wheelchair Accessibility</h3>
         <p>
-            Kalau diantar, minta diturunin persis di depan venue. dari pintu masuk parkir (ambil tiket), naik ke atas
-            ramp 1 kali, abis itu di ramp ke 2, ambil kanan (jangan naik ramp kedua), lokasi ada di sebelah kanan persis
+          Wheelchair entry is only possible through the Depok Town Square front lobby or in front of Koffie Garden.
+          If you need further assistance during the event, please don't hesitate to reach out to TeknumConf 2023 team.
         </p>
     </div>
 </div></template>

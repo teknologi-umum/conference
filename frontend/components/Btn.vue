@@ -21,13 +21,14 @@ const props = defineProps({
     }
 })
 
+const emit = defineEmits(['click'])
 const classes = computed(() => `btn btn-${props.color} btn-${props.size} inline-block`)
 </script>
 <template>
     <router-link :to="to!" :class="classes" v-if="isLink">
         <slot></slot>
     </router-link>
-    <button :class="classes" v-else @click="$emit('click')">
+    <button :class="classes" v-else @click="emit('click')">
         <slot></slot>
     </button>
 </template>
@@ -56,6 +57,13 @@ const classes = computed(() => `btn btn-${props.color} btn-${props.size} inline-
 .btn-md {
     --radius: .3rem;
 }
+.btn-lg2 {
+
+    --radius: 50rem;
+    padding: .8rem 1rem;
+    font-size: 1.2rem;
+    min-width: min(100%, 200px);
+}
 .btn-lg {
     --radius: .5rem;
     padding: 1rem;
@@ -77,5 +85,10 @@ const classes = computed(() => `btn btn-${props.color} btn-${props.size} inline-
 .btn-primary:hover {
     box-shadow: 0 5px 30px rgba(96, 96, 255, 0.639);
     background: var(--color-primary-gradient-hover);
+}
+.btn-outline {
+    background-color: transparent;
+    color: white;
+    border: 1px solid white;
 }
 </style>

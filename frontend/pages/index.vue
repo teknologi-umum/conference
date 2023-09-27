@@ -36,6 +36,8 @@ const speakers = ref([
         image: mustafaImage,
     }
 ]) 
+
+const showVideo = ref(false)
 </script>
 <template>
     <div class="page">
@@ -100,6 +102,18 @@ const speakers = ref([
             <div class="container | mx-auto px-5 lg:flex  lg:w-1/2">
                 <div class="section-left text-center mb-16">
                     <h2 class="section-title leading-normal mb-8">How to get to venue</h2>
+
+                    <!-- Toggle video -->
+                    <Btn color="outline" size="lg2" class="mb-10" @click="showVideo=!showVideo">
+                        <div class="flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M10 16.5v-9l6 4.5M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2Z"/></svg>
+                            Show video
+                        </div>
+                    </Btn>
+                    <div v-show="showVideo">
+                        <video src="@/assets/how_to_venue.mp4" controls class="h-80" ></video>
+                    </div>
+
                     <HowToVenue/>
                 </div>
             </div>

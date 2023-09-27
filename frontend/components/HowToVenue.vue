@@ -48,7 +48,8 @@ const showWheelchair = ref(false)
         <h3 class="mb-3">Wheelchair Accessibility</h3>
         <p>
           Wheelchair entry is only possible through the Depok Town Square front lobby or in front of Koffie Garden.
-          If you need further assistance during the event, please don't hesitate to reach out to TeknumConf 2023 team.
+          If you need further assistance during the event, please don't hesitate to reach out to TeknumConf 2023 team
+          via Telegram <a href="https://t.me/qepo_s">@qepo_s (Taufiq)</a> or <a href="https://t.me/aldy505">@aldy505 (Reinaldy)</a>.
         </p>
     </div>
 </div></template>

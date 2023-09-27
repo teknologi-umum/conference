@@ -32,7 +32,6 @@ func App() *cli.App {
 		Version:        version,
 		Description:    "CLI for working with Teknologi Umum Conference backend",
 		DefaultCommand: "server",
-
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "config-file-path",
@@ -53,9 +52,17 @@ func App() *cli.App {
 						Debug:            config.Environment != "production",
 						AttachStacktrace: true,
 						SampleRate:       1.0,
-						Release:          version,
-						Environment:      config.Environment,
-						DebugWriter:      log.Logger,
+						EnableTracing:    true,
+						TracesSampler: func(ctx sentry.SamplingContext) float64 {
+							if ctx.Span.Name == "GET /ping" {
+								return 0
+							}
+
+							return 0.2
+						},
+						Release:     version,
+						Environment: config.Environment,
+						DebugWriter: log.Logger,
 						BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
 							if config.Environment != "production" {
 								log.Debug().Interface("exceptions", event.Exception).Msg(event.Message)
@@ -68,19 +75,25 @@ func App() *cli.App {
 						return fmt.Errorf("initializing Sentry: %w", err)
 					}
 
-					conn, err := pgxpool.New(
-						context.Background(),
-						fmt.Sprintf(
-							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
-							config.Database.User,
-							config.Database.Password,
-							config.Database.Host,
-							config.Database.Port,
-							config.Database.Name,
-						),
-					)
+					pgxRawConfig, err := pgxpool.ParseConfig(fmt.Sprintf(
+						"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
+						config.Database.User,
+						config.Database.Password,
+						config.Database.Host,
+						config.Database.Port,
+						config.Database.Name,
+					))
 					if err != nil {
-						return fmt.Errorf("failed connect to database: %w", err)
+						log.Fatal().Err(err).Msg("Parsing connection string configuration")
+					}
+
+					pgxConfig := pgxRawConfig.Copy()
+
+					pgxConfig.ConnConfig.Tracer = &PGXTracer{}
+
+					conn, err := pgxpool.NewWithConfig(cCtx.Context, pgxConfig)
+					if err != nil {
+						log.Fatal().Err(err).Msg("failed to connect to database")
 					}
 					defer conn.Close()
 
@@ -245,7 +258,7 @@ func App() *cli.App {
 					}
 
 					conn, err := pgxpool.New(
-						cCtx.Context,
+						context.Background(),
 						fmt.Sprintf(
 							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
 							config.Database.User,
@@ -256,7 +269,7 @@ func App() *cli.App {
 						),
 					)
 					if err != nil {
-						log.Fatal().Err(err).Msg("failed to connect to database")
+						return fmt.Errorf("failed connect to database: %w", err)
 					}
 					defer conn.Close()
 
@@ -399,7 +412,6 @@ func App() *cli.App {
 							HtmlBody:       string(htmlContent),
 						}
 
-
 						// Parse email template information
 						emailTemplate := map[string]any{
 							"ticketPrice":                         config.EmailTemplate.TicketPrice,
@@ -417,11 +429,10 @@ func App() *cli.App {
 							emailTemplate["name"] = user.Name
 						}
 
-
 						mail.PlainTextBody = plaintextTemplate.MustExec(emailTemplate)
 						mail.HtmlBody = htmlTemplate.MustExec(emailTemplate)
 
-						err := mailSender.Send(mail)
+						err := mailSender.Send(cCtx.Context, mail)
 						if err != nil {
 							log.Error().Err(err).Msgf("failed to send email to %s", user.Email)
 							continue

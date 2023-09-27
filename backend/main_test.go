@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"gocloud.dev/blob"
 	_ "gocloud.dev/blob/fileblob"
@@ -50,6 +51,8 @@ func TestMain(m *testing.M) {
 	if !ok {
 		smtpPassword = ""
 	}
+
+	_ = sentry.Init(sentry.ClientOptions{})
 
 	database, err = pgxpool.New(context.Background(), databaseUrl)
 	if err != nil {

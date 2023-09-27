@@ -9,7 +9,8 @@ export default defineNuxtConfig({
       eventSchedule: true,
       aggressiveIntroduction: true,
       fifaChampionship: true,
-      backendBaseUrl: process.env.NODE_ENV === "development" ? "http://localhost:8080" : "https://conf.teknologiumum.com/api"
+      backendBaseUrl: process.env.NODE_ENV === "development" ? "http://localhost:8080" : "https://conf.teknologiumum.com/api",
+      sentryDSN: process.env.SENTRY_DSN,
     }
   },
   googleFonts: {
@@ -25,11 +26,6 @@ export default defineNuxtConfig({
   modules: [
     '@unocss/nuxt',
     '@nuxtjs/google-fonts',
-    // "@model-w/sentry"
   ],
-  // sentry: {
-  //   dsn: process.env.SENTRY_DSN,
-  //   environment: process.env.SENTRY_ENVIRONMENT
-  // },
   devtools: { enabled: true },
 })

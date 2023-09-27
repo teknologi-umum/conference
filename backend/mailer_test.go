@@ -1,9 +1,11 @@
 package main_test
 
 import (
+	"context"
 	"testing"
 
 	main "conf"
+	"github.com/getsentry/sentry-go"
 )
 
 func TestMailSender(t *testing.T) {
@@ -53,7 +55,7 @@ Please do contact us if you didn't receive any email by then.</p>
 </html>`,
 		}
 
-		err := mailSender.Send(mail)
+		err := mailSender.Send(sentry.SetHubOnContext(context.Background(), sentry.CurrentHub().Clone()), mail)
 		if err != nil {
 			t.Errorf("unexpected error: %s", err.Error())
 		}

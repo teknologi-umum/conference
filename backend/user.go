@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -54,6 +55,9 @@ func (c CreateParticipantRequest) validate() (errors []string) {
 }
 
 func (u *UserDomain) CreateParticipant(ctx context.Context, req CreateParticipantRequest) error {
+	span := sentry.StartSpan(ctx, "user.create_participant")
+	defer span.Finish()
+
 	if errors := req.validate(); len(errors) > 0 {
 		return &ValidationError{Errors: errors}
 	}
@@ -97,6 +101,9 @@ type UserFilterRequest struct {
 }
 
 func (u *UserDomain) GetUsers(ctx context.Context, filter UserFilterRequest) ([]User, error) {
+	span := sentry.StartSpan(ctx, "user.get_users")
+	defer span.Finish()
+
 	c, err := u.db.Acquire(ctx)
 	if err != nil {
 		return nil, err
@@ -128,6 +135,9 @@ func (u *UserDomain) GetUsers(ctx context.Context, filter UserFilterRequest) ([]
 }
 
 func (u *UserDomain) ExportUnprocessedUsersAsCSV(ctx context.Context) error {
+	span := sentry.StartSpan(ctx, "user.export_unprocessed_users_as_csv")
+	defer span.Finish()
+	
 	users, err := u.GetUsers(ctx, UserFilterRequest{
 		Type:        TypeParticipant,
 		IsProcessed: false,

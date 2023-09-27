@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"net"
 	"net/smtp"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 )
 
@@ -59,7 +61,10 @@ func NewMailSender(configuration *MailConfiguration) *Mailer {
 	return mailer
 }
 
-func (m *Mailer) messageBuilder(mail *Mail) []byte {
+func (m *Mailer) messageBuilder(ctx context.Context, mail *Mail) []byte {
+	span := sentry.StartSpan(ctx, "mailer.message_builder")
+	defer span.Finish()
+
 	// Refer to https://www.rfc-editor.org/rfc/rfc5322
 	mixedBoundary := strings.ReplaceAll(uuid.NewString(), "-", "")
 	relatedBoundary := strings.ReplaceAll(uuid.NewString(), "-", "")
@@ -120,14 +125,17 @@ func (m *Mailer) messageBuilder(mail *Mail) []byte {
 	return msg.Bytes()
 }
 
-func (m *Mailer) Send(mail *Mail) error {
+func (m *Mailer) Send(ctx context.Context, mail *Mail) error {
+	span := sentry.StartSpan(ctx, "mailer.send")
+	defer span.Finish()
+
 	if m.configuration.SmtpFrom == "" || m.configuration.SmtpPassword == "" {
 		return smtp.SendMail(
 			net.JoinHostPort(m.configuration.SmtpHostname, m.configuration.SmtpPort),
 			nil, // no auth
 			"conference@teknologiumum.com",
 			[]string{mail.RecipientEmail},
-			m.messageBuilder(mail),
+			m.messageBuilder(ctx, mail),
 		)
 	}
 
@@ -136,6 +144,6 @@ func (m *Mailer) Send(mail *Mail) error {
 		smtp.PlainAuth("", m.configuration.SmtpFrom, m.configuration.SmtpPassword, m.configuration.SmtpHostname),
 		"conference@teknologiumum.com",
 		[]string{mail.RecipientEmail},
-		m.messageBuilder(mail),
+		m.messageBuilder(ctx, mail),
 	)
 }

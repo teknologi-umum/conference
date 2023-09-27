@@ -28,13 +28,12 @@ const submit = async () => {
 
         alert.msg = response.error.value?.data?.message || "System error"
         
-        if(response.error.value?.statusCode == 400) {
+        if (response.error.value?.statusCode == 400) {
             alert.msg = "Please check your input"
         }
 
         return;
     }
-    
 
     email.value = ''
     photo.value = undefined

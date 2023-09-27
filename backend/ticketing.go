@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -65,6 +66,9 @@ func NewTicketDomain(db *pgxpool.Pool, bucket *blob.Bucket, privateKey ed25519.P
 // StorePaymentReceipt stores the photo and email combination into our datastore.
 // This will be reviewed manually by the TeknumConf team.
 func (t *TicketDomain) StorePaymentReceipt(ctx context.Context, email string, photo io.Reader, contentType string) error {
+	span := sentry.StartSpan(ctx, "ticket.store_payment_receipt")
+	defer span.Finish()
+
 	var validationError ValidationError
 	if email == "" {
 		validationError.Errors = append(validationError.Errors, "email is empty")
@@ -142,6 +146,9 @@ func (t *TicketDomain) StorePaymentReceipt(ctx context.Context, email string, ph
 //
 // It will return ErrInvalidTicket if the payment receipt's not uploaded yet.
 func (t *TicketDomain) ValidatePaymentReceipt(ctx context.Context, email string) (string, error) {
+	span := sentry.StartSpan(ctx, "ticket.validate_payment_receipt")
+	defer span.Finish()
+
 	if email == "" {
 		return "", ValidationError{Errors: []string{"email is empty"}}
 	}
@@ -207,7 +214,7 @@ func (t *TicketDomain) ValidatePaymentReceipt(ctx context.Context, email string)
 	imageCid, _, _ := strings.Cut(uuid.NewString(), "-")
 
 	// Send email programmatically
-	err = t.mailer.Send(&Mail{
+	err = t.mailer.Send(ctx, &Mail{
 		RecipientName:  "",
 		RecipientEmail: email,
 		Subject:        "TeknumConf 2023: Tiket Anda!",
@@ -306,6 +313,9 @@ harap abaikan email ini. Terima kasih!`,
 //
 // If the signature is invalid or the ticket is used, it will return ErrInvalidTicket error.
 func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (ok bool, student bool, err error) {
+	span := sentry.StartSpan(ctx, "ticket.verify_ticket")
+	defer span.Finish()
+
 	if len(payload) == 0 {
 		return false, false, ValidationError{Errors: []string{"payload is empty"}}
 	}
@@ -397,6 +407,9 @@ func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (ok boo
 }
 
 func (t *TicketDomain) VerifyIsStudent(ctx context.Context, email string) (err error) {
+	span := sentry.StartSpan(ctx, "ticket.verify_is_student")
+	defer span.Finish()
+
 	if email == "" {
 		return ValidationError{Errors: []string{"email is empty"}}
 	}

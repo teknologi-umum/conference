@@ -23,11 +23,10 @@ const submit = async () => {
 
         alert.msg = response.error.value?.data?.message
         
-        if(response.error.value?.statusCode == 400) {
+        if (response.error.value?.statusCode == 400) {
             alert.msg = "Please check your input"
         }
 
-        
         return;
     }
     

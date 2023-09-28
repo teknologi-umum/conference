@@ -27,7 +27,7 @@ import (
 var version string
 
 func App() *cli.App {
-	app := &cli.App{
+	return &cli.App{
 		Name:           "teknum-conf",
 		Version:        version,
 		Description:    "CLI for working with Teknologi Umum Conference backend",
@@ -640,6 +640,106 @@ func App() *cli.App {
 					return nil
 				},
 			},
+			{
+				Name:        "verify-payment",
+				Usage:       "verify-payment --email johndoe@example.com",
+				Description: "Verifies a payment by a certain email. This will send an email containing a QR code ticket for the attendee.",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "email",
+						Usage:    "Specifies the email for the manually payment-verified attendee",
+						Required: true,
+					},
+				},
+				Action: func(c *cli.Context) error {
+					email := c.String("email")
+					if email == "" {
+						return fmt.Errorf("--email flag is required and must not be left empty")
+					}
+
+					config, err := GetConfig(c.String("config-file-path"))
+					if err != nil {
+						return fmt.Errorf("failed to get config: %w", err)
+					}
+
+					err = sentry.Init(sentry.ClientOptions{
+						Dsn:              "",
+						Debug:            config.Environment != "production",
+						AttachStacktrace: true,
+						SampleRate:       1.0,
+						Release:          version,
+						Environment:      config.Environment,
+						DebugWriter:      log.Logger,
+						BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+							if config.Environment != "production" {
+								log.Debug().Interface("exceptions", event.Exception).Msg(event.Message)
+							}
+
+							return event
+						},
+					})
+					if err != nil {
+						return fmt.Errorf("initializing Sentry: %w", err)
+					}
+
+					bucket, err := blob.OpenBucket(context.Background(), config.BlobUrl)
+					if err != nil {
+						return fmt.Errorf("opening bucket: %w", err)
+					}
+					defer func() {
+						err := bucket.Close()
+						if err != nil {
+							log.Warn().Err(err).Msg("Closing bucket")
+						}
+					}()
+
+					signaturePrivateKey, err := hex.DecodeString(config.Signature.PrivateKey)
+					if err != nil {
+						return fmt.Errorf("invalid signature private key: %w", err)
+					}
+
+					signaturePublicKey, err := hex.DecodeString(config.Signature.PublicKey)
+					if err != nil {
+						return fmt.Errorf("invalid signature public key: %w", err)
+					}
+
+					mailer := NewMailSender(&MailConfiguration{
+						SmtpHostname: config.Mailer.Hostname,
+						SmtpPort:     config.Mailer.Port,
+						SmtpFrom:     config.Mailer.From,
+						SmtpPassword: config.Mailer.Password,
+					})
+
+					conn, err := pgxpool.New(
+						c.Context,
+						fmt.Sprintf(
+							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
+							config.Database.User,
+							config.Database.Password,
+							config.Database.Host,
+							config.Database.Port,
+							config.Database.Name,
+						),
+					)
+					if err != nil {
+						return fmt.Errorf("failed to connect to database: %w", err)
+					}
+
+					ticketDomain, err := NewTicketDomain(conn, bucket, signaturePrivateKey, signaturePublicKey, mailer)
+					if err != nil {
+						return fmt.Errorf("creating a ticket domain instance: %s", err.Error())
+					}
+
+					_, err = ticketDomain.ValidatePaymentReceipt(c.Context, email)
+					if err != nil {
+						return fmt.Errorf("validating payment receipt: %w", err)
+					}
+
+					log.Info().Msgf("Successfully validated payment receipt for %s", email)
+
+					return nil
+				},
+			},
 		},
 		Copyright: `   Copyright 2023 Teknologi Umum
 
@@ -655,8 +755,6 @@ func App() *cli.App {
    See the License for the specific language governing permissions and
    limitations under the License.`,
 	}
-
-	return app
 }
 
 func main() {

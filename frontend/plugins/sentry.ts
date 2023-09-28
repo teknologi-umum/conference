@@ -1,4 +1,6 @@
-import * as Sentry from "@sentry/vue";
+import { init } from "@sentry/vue";
+import { defaultIntegrations, BrowserTracing, Replay, flush } from "@sentry/browser"
+import * as Sentry from "@sentry/browser";
 
 export default defineNuxtPlugin(nuxt => {
     const sentryDSN = nuxt.$config.public["sentryDSN"];
@@ -8,12 +10,13 @@ export default defineNuxtPlugin(nuxt => {
     }
 
     nuxt.hook("app:created", () => {
-        Sentry.init({
+        init({
             app: nuxt.vueApp,
             dsn: sentryDSN,
             integrations: [
-                new Sentry.BrowserTracing(),
-                new Sentry.Replay(),
+                ...defaultIntegrations,
+                new BrowserTracing(),
+                new Replay(),
             ],
             sampleRate: 1.0,
             tracesSampleRate: 0.2,
@@ -26,7 +29,7 @@ export default defineNuxtPlugin(nuxt => {
     nuxt.hook(
         "page:transition:finish",
         async () => {
-            await Sentry.flush(5000);
+            await flush(5000);
         },
     )
 

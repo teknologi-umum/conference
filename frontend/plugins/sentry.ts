@@ -12,7 +12,6 @@ export default defineNuxtPlugin(nuxt => {
             app: nuxt.vueApp,
             dsn: sentryDSN,
             integrations: [
-                new Sentry.Integrations.Dedupe(),
                 new Sentry.BrowserTracing(),
                 new Sentry.Replay(),
             ],

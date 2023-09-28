@@ -74,6 +74,7 @@ func App() *cli.App {
 					if err != nil {
 						return fmt.Errorf("initializing Sentry: %w", err)
 					}
+					defer sentry.Flush(time.Minute)
 
 					pgxRawConfig, err := pgxpool.ParseConfig(fmt.Sprintf(
 						"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
@@ -131,9 +132,10 @@ func App() *cli.App {
 					}
 
 					httpServer := NewServer(&ServerConfig{
-						UserDomain:   NewUserDomain(conn),
-						TicketDomain: ticketDomain,
-						Environment:  config.Environment,
+						UserDomain:                NewUserDomain(conn),
+						TicketDomain:              ticketDomain,
+						Environment:               config.Environment,
+						FeatureRegistrationClosed: config.FeatureFlags.RegistrationClosed,
 					})
 
 					exitSig := make(chan os.Signal, 1)

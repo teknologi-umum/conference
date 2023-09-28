@@ -14,14 +14,16 @@ import (
 )
 
 type ServerConfig struct {
-	UserDomain   *UserDomain
-	TicketDomain *TicketDomain
-	Environment  string
+	UserDomain                *UserDomain
+	TicketDomain              *TicketDomain
+	Environment               string
+	FeatureRegistrationClosed bool
 }
 
 type ServerDependency struct {
-	userDomain   *UserDomain
-	ticketDomain *TicketDomain
+	userDomain         *UserDomain
+	ticketDomain       *TicketDomain
+	registrationClosed bool
 }
 
 func NewServer(config *ServerConfig) *echo.Echo {
@@ -35,8 +37,9 @@ func NewServer(config *ServerConfig) *echo.Echo {
 	}
 
 	dependencies := &ServerDependency{
-		userDomain:   config.UserDomain,
-		ticketDomain: config.TicketDomain,
+		userDomain:         config.UserDomain,
+		ticketDomain:       config.TicketDomain,
+		registrationClosed: config.FeatureRegistrationClosed,
 	}
 
 	e := echo.New()
@@ -77,6 +80,13 @@ func (s *ServerDependency) RegisterUser(c echo.Context) error {
 	requestId := c.Response().Header().Get(echo.HeaderXRequestID)
 	sentryHub := sentryecho.GetHubFromContext(c)
 	sentryHub.Scope().SetTag("request-id", requestId)
+
+	if s.registrationClosed {
+		return c.JSON(http.StatusNotAcceptable, echo.Map{
+			"message":    "Registration is closed",
+			"request_id": requestId,
+		})
+	}
 
 	p := RegisterUserRequest{}
 	if err := c.Bind(&p); err != nil {

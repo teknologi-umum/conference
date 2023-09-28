@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/flowchartsman/handlebars/v3"
@@ -647,13 +648,13 @@ func App() *cli.App {
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "email",
-						Usage:    "Specifies the email for the manually payment-verified attendee",
+						Usage:    "Specifies the email for the manually payment-verified attendee. Should be a comma separated emails.",
 						Required: true,
 					},
 				},
 				Action: func(c *cli.Context) error {
-					email := c.String("email")
-					if email == "" {
+					emails := strings.Split(c.String("email"), ",")
+					if len(emails) == 0 {
 						return fmt.Errorf("--email flag is required and must not be left empty")
 					}
 
@@ -681,6 +682,9 @@ func App() *cli.App {
 					if err != nil {
 						return fmt.Errorf("initializing Sentry: %w", err)
 					}
+					defer sentry.Flush(time.Second * 10)
+
+					c.Context = sentry.SetHubOnContext(c.Context, sentry.CurrentHub().Clone())
 
 					bucket, err := blob.OpenBucket(context.Background(), config.BlobUrl)
 					if err != nil {
@@ -724,19 +728,25 @@ func App() *cli.App {
 					if err != nil {
 						return fmt.Errorf("failed to connect to database: %w", err)
 					}
+					defer conn.Close()
 
 					ticketDomain, err := NewTicketDomain(conn, bucket, signaturePrivateKey, signaturePublicKey, mailer)
 					if err != nil {
 						return fmt.Errorf("creating a ticket domain instance: %s", err.Error())
 					}
 
-					_, err = ticketDomain.ValidatePaymentReceipt(c.Context, email)
-					if err != nil {
-						return fmt.Errorf("validating payment receipt: %w", err)
+					for _, email := range emails {
+						_, err = ticketDomain.ValidatePaymentReceipt(c.Context, email)
+						if err != nil {
+							sentry.GetHubFromContext(c.Context).CaptureException(err)
+							log.Error().Err(err).Str("email", email).Msg("Validating payment receipt")
+							continue
+						}
+
+						log.Info().Str("email", email).Msg("Validating payment receipt")
 					}
 
-					log.Info().Msgf("Successfully validated payment receipt for %s", email)
-
+					log.Info().Msg("Finished verifying payments")
 					return nil
 				},
 			},

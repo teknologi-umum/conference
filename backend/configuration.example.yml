@@ -1,11 +1,14 @@
+feature_flags:
+  registration_closed: false
+
+environment: local
+
 database:
   host: localhost
   port: 5432
   user: postgres
   password: postgres
   database: postgres
-
-environment: local
 
 port: 8080
 

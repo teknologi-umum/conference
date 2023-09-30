@@ -10,6 +10,9 @@ import (
 )
 
 type Config struct {
+	FeatureFlags struct {
+		RegistrationClosed bool `yaml:"registration_closed" envconfig:"FEATURE_REGISTRATION_CLOSED" default:"false"`
+	} `yaml:"feature_flags"`
 	Database struct {
 		Host     string `yaml:"host" envconfig:"DB_HOST" default:"localhost"`
 		Port     uint16 `yaml:"port" envconfig:"DB_PORT" default:"5432"`

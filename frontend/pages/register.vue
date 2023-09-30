@@ -18,13 +18,13 @@ const submit = async () => {
     alert.type = 'success'
     alert.msg = "Registration success. You will receive an invitation via email within 7 business days."
     if (response.error.value != null) {
-        // TODO: handle on registration response error
         alert.type = 'danger'
-
         alert.msg = response.error.value?.data?.message
         
         if (response.error.value?.statusCode == 400) {
             alert.msg = "Please check your input"
+        } else if (response.error?.value.statusCode == 406) {
+            alert.msg = "Sorry, registration has been closed. We're no longer accepting any attendee registration."
         }
 
         return;

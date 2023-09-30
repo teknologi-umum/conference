@@ -1,0 +1,11 @@
+Hello, {{ name }} 👋
+
+Terima kasih atas antusias kamu terhadap TeknumConf 2023. Pembayaran kamu  telah kami terima, ya! Tiket akan dikirimkan via email dalam kurun waktu 3 hari kedepan.
+
+Jika kamu memiliki pertanyaan, jangan ragu untuk menghubungi kami melalui email conference@teknologiumum.com. 
+
+Sampai ketemu di TeknumConf 2023!
+
+Best regards,
+Reinaldy
+From the team at TeknumConf 2023

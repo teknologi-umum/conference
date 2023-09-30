@@ -234,7 +234,7 @@ func (s *ServerDependency) DayTicketScan(c echo.Context) error {
 		})
 	}
 
-	email, student, err := s.ticketDomain.VerifyTicket(span.Context(), []byte(requestBody.Code))
+	email, name, student, err := s.ticketDomain.VerifyTicket(span.Context(), []byte(requestBody.Code))
 	if err != nil {
 		var validationError *ValidationError
 		if errors.As(err, &validationError) {
@@ -264,6 +264,7 @@ func (s *ServerDependency) DayTicketScan(c echo.Context) error {
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "Ticket confirmed",
 		"student": student,
+		"name":    name,
 		"email":   email,
 	})
 }

@@ -7,6 +7,7 @@ import (
 	"path"
 	"slices"
 
+	"github.com/getsentry/sentry-go"
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -68,6 +69,7 @@ func NewServer(config *ServerConfig) *echo.Echo {
 
 	e.POST("/users", dependencies.RegisterUser)
 	e.POST("/bukti-transfer", dependencies.UploadBuktiTransfer)
+	e.POST("/scan-tiket", dependencies.DayTicketScan)
 	return e
 }
 
@@ -80,6 +82,9 @@ func (s *ServerDependency) RegisterUser(c echo.Context) error {
 	requestId := c.Response().Header().Get(echo.HeaderXRequestID)
 	sentryHub := sentryecho.GetHubFromContext(c)
 	sentryHub.Scope().SetTag("request-id", requestId)
+
+	span := sentry.StartSpan(c.Request().Context(), "http.server", sentry.WithTransactionName("POST /users"), sentry.WithTransactionSource(sentry.SourceRoute))
+	defer span.Finish()
 
 	if s.registrationClosed {
 		return c.JSON(http.StatusNotAcceptable, echo.Map{
@@ -98,7 +103,7 @@ func (s *ServerDependency) RegisterUser(c echo.Context) error {
 	}
 
 	err := s.userDomain.CreateParticipant(
-		c.Request().Context(),
+		span.Context(),
 		CreateParticipantRequest{
 			Name:  p.Name,
 			Email: p.Email,
@@ -129,6 +134,9 @@ func (s *ServerDependency) UploadBuktiTransfer(c echo.Context) error {
 	requestId := c.Response().Header().Get(echo.HeaderXRequestID)
 	sentryHub := sentryecho.GetHubFromContext(c)
 	sentryHub.Scope().SetTag("request-id", requestId)
+
+	span := sentry.StartSpan(c.Request().Context(), "http.server", sentry.WithTransactionName("POST /bukti-transfer"), sentry.WithTransactionSource(sentry.SourceRoute))
+	defer span.Finish()
 
 	if err := c.Request().ParseMultipartForm(32 << 10); err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{
@@ -183,7 +191,7 @@ func (s *ServerDependency) UploadBuktiTransfer(c echo.Context) error {
 
 	photoContentType := mime.TypeByExtension(photoExtension)
 
-	err = s.ticketDomain.StorePaymentReceipt(c.Request().Context(), email, photoFile, photoContentType)
+	err = s.ticketDomain.StorePaymentReceipt(span.Context(), email, photoFile, photoContentType)
 	if err != nil {
 		var validationError *ValidationError
 		if errors.As(err, &validationError) {
@@ -203,4 +211,60 @@ func (s *ServerDependency) UploadBuktiTransfer(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusCreated)
+}
+
+type DayTicketScanRequest struct {
+	Code string `json:"code"`
+}
+
+func (s *ServerDependency) DayTicketScan(c echo.Context) error {
+	requestId := c.Response().Header().Get(echo.HeaderXRequestID)
+	sentryHub := sentryecho.GetHubFromContext(c)
+	sentryHub.Scope().SetTag("request-id", requestId)
+
+	span := sentry.StartSpan(c.Request().Context(), "http.server", sentry.WithTransactionName("POST /scan-tiket"), sentry.WithTransactionSource(sentry.SourceRoute))
+	defer span.Finish()
+
+	var requestBody DayTicketScanRequest
+	if err := c.Bind(&requestBody); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{
+			"message":    "Invalid request body",
+			"errors":     err.Error(),
+			"request_id": requestId,
+		})
+	}
+
+	email, name, student, err := s.ticketDomain.VerifyTicket(span.Context(), []byte(requestBody.Code))
+	if err != nil {
+		var validationError *ValidationError
+		if errors.As(err, &validationError) {
+			return c.JSON(http.StatusBadRequest, echo.Map{
+				"message":    "Validation error",
+				"errors":     validationError.Error(),
+				"request_id": requestId,
+			})
+		}
+
+		if errors.Is(err, ErrInvalidTicket) {
+			return c.JSON(http.StatusNotAcceptable, echo.Map{
+				"message":    "Invalid ticket",
+				"errors":     err.Error(),
+				"request_id": requestId,
+			})
+		}
+
+		sentryHub.CaptureException(err)
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"message":    "Internal server error",
+			"errors":     "Internal server error",
+			"request_id": requestId,
+		})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Ticket confirmed",
+		"student": student,
+		"name":    name,
+		"email":   email,
+	})
 }

@@ -20,7 +20,7 @@ const submit = async () => {
         body: formData
     });
     alert.type = 'success'
-    alert.msg = "Upload Payment success. Please wait for the email regarding the payment status."
+    alert.msg = "Upload Payment success. Please wait for the email regarding the payment status within a few days."
 
     if (response.error.value != null) {
         // TODO: handle on upload response error
@@ -30,6 +30,10 @@ const submit = async () => {
         
         if (response.error.value?.statusCode == 400) {
             alert.msg = "Please check your input"
+        }
+
+        if (response.error.value?.statusCode == 412) {
+            alert.msg = "We didn't recognize your email, make sure you're using the same email with your registration one."
         }
 
         return;

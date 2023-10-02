@@ -105,11 +105,11 @@ func (t *TicketDomain) StorePaymentReceipt(ctx context.Context, email string, ph
 	err = tx.QueryRow(ctx, `SELECT id FROM users WHERE email = $1`, email).Scan(&userID)
 	if err != nil {
 		if e := tx.Rollback(ctx); e != nil {
-			return fmt.Errorf("rolling back transaction: %w (%s)", e, err.Error())
-		}
+			if errors.Is(err, pgx.ErrNoRows) {
+				return ErrUserEmailNotFound
+			}
 
-		if errors.Is(err, pgx.ErrNoRows) {
-			return ErrUserEmailNotFound
+			return fmt.Errorf("rolling back transaction: %w (%s)", e, err.Error())
 		}
 
 		return fmt.Errorf("executing select query: %w", err)

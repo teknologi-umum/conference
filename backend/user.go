@@ -137,7 +137,7 @@ func (u *UserDomain) GetUsers(ctx context.Context, filter UserFilterRequest) ([]
 func (u *UserDomain) ExportUnprocessedUsersAsCSV(ctx context.Context) error {
 	span := sentry.StartSpan(ctx, "user.export_unprocessed_users_as_csv")
 	defer span.Finish()
-	
+
 	users, err := u.GetUsers(ctx, UserFilterRequest{
 		Type:        TypeParticipant,
 		IsProcessed: false,

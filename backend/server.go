@@ -202,6 +202,14 @@ func (s *ServerDependency) UploadBuktiTransfer(c echo.Context) error {
 			})
 		}
 
+		if errors.Is(err, ErrUserEmailNotFound) {
+			return c.JSON(http.StatusPreconditionFailed, echo.Map{
+				"message":    "User not found",
+				"errors":     err.Error(),
+				"request_id": requestId,
+			})
+		}
+
 		sentryHub.CaptureException(err)
 		return c.JSON(http.StatusInternalServerError, echo.Map{
 			"message":    "Internal server error",

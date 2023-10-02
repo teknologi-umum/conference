@@ -137,6 +137,16 @@ func TestTicketDomain_StorePaymentReceipt(t *testing.T) {
 			t.Errorf("unexpected error: %s", err.Error())
 		}
 	})
+
+	t.Run("User email not found, should return ErrUserEmailNotFound", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+
+		err := ticketDomain.StorePaymentReceipt(ctx, "johndoe+not+found@example.com", strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."), "text/plain")
+		if err != nil && !errors.Is(err, main.ErrUserEmailNotFound) {
+			t.Errorf("unexpected error: %s", err.Error())
+		}
+	})
 }
 
 func TestTicketDomain_ValidatePaymentReceipt(t *testing.T) {

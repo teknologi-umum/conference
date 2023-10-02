@@ -24,6 +24,7 @@ import (
 )
 
 var ErrInvalidTicket = errors.New("invalid ticket")
+var ErrUserEmailNotFound = errors.New("user email not found")
 
 type TicketDomain struct {
 	db         *pgxpool.Pool
@@ -86,23 +87,6 @@ func (t *TicketDomain) StorePaymentReceipt(ctx context.Context, email string, ph
 		return validationError
 	}
 
-	fileExtensions, _ := mime.ExtensionsByType(contentType)
-	if len(fileExtensions) == 0 {
-		fileExtensions = []string{""} // length is not zero, we can safely call fileExtensions[0]
-	}
-
-	// Store photo to filesystem (please use this one https://pkg.go.dev/gocloud.dev@v0.34.0/blob)
-	blobKey := fmt.Sprintf("%s_%s.%s", time.Now().Format(time.RFC3339), email, fileExtensions[0])
-	err := t.bucket.Upload(ctx, blobKey, photo, &blob.WriterOptions{
-		ContentType: contentType,
-		Metadata: map[string]string{
-			"email": email,
-		},
-	})
-	if err != nil {
-		return fmt.Errorf("uploading to bucket storage: %w", err)
-	}
-
 	// Write entry to postgres
 	conn, err := t.db.Acquire(ctx)
 	if err != nil {
@@ -115,6 +99,36 @@ func (t *TicketDomain) StorePaymentReceipt(ctx context.Context, email string, ph
 	})
 	if err != nil {
 		return fmt.Errorf("creating transaction: %w", err)
+	}
+
+	_, err = tx.Exec(ctx, `SELECT id FROM users WHERE email = $1`, email)
+	if err != nil {
+		if e := tx.Rollback(ctx); e != nil {
+			return fmt.Errorf("rolling back transaction: %w (%s)", e, err.Error())
+		}
+
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrUserEmailNotFound
+		}
+
+		return fmt.Errorf("executing select query: %w", err)
+	}
+
+	fileExtensions, _ := mime.ExtensionsByType(contentType)
+	if len(fileExtensions) == 0 {
+		fileExtensions = []string{""} // length is not zero, we can safely call fileExtensions[0]
+	}
+
+	// Store photo to filesystem (please use this one https://pkg.go.dev/gocloud.dev@v0.34.0/blob)
+	blobKey := fmt.Sprintf("%s_%s.%s", time.Now().Format(time.RFC3339), email, fileExtensions[0])
+	err = t.bucket.Upload(ctx, blobKey, photo, &blob.WriterOptions{
+		ContentType: contentType,
+		Metadata: map[string]string{
+			"email": email,
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("uploading to bucket storage: %w", err)
 	}
 
 	_, err = tx.Exec(

@@ -97,6 +97,8 @@ func TestTicketDomain_StorePaymentReceipt(t *testing.T) {
 		t.Fatalf("creating a ticket domain instance: %s", err.Error())
 	}
 
+	userDomain := main.NewUserDomain(database)
+
 	t.Run("Invalid Email and photo", func(t *testing.T) {
 		err := ticketDomain.StorePaymentReceipt(context.Background(), "", nil, "")
 		if err == nil {
@@ -115,7 +117,16 @@ func TestTicketDomain_StorePaymentReceipt(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
 
-		err := ticketDomain.StorePaymentReceipt(ctx, "johndoe+happy@example.com", strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."), "text/plain")
+		email := "johndoe+happy@example.com"
+		err := userDomain.CreateParticipant(ctx, main.CreateParticipantRequest{
+			Name:  "John Doe",
+			Email: email,
+		})
+		if err != nil {
+			t.Errorf("unexpected error: %s", err.Error())
+		}
+
+		err = ticketDomain.StorePaymentReceipt(ctx, email, strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."), "text/plain")
 		if err != nil {
 			t.Errorf("unexpected error: %s", err.Error())
 		}
@@ -143,6 +154,10 @@ func TestTicketDomain_StorePaymentReceipt(t *testing.T) {
 		defer cancel()
 
 		err := ticketDomain.StorePaymentReceipt(ctx, "johndoe+not+found@example.com", strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."), "text/plain")
+		if err == nil {
+			t.Error("expecting an error, got nil instead")
+		}
+
 		if err != nil && !errors.Is(err, main.ErrUserEmailNotFound) {
 			t.Errorf("unexpected error: %s", err.Error())
 		}

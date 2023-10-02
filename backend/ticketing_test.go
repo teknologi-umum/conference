@@ -136,14 +136,23 @@ func TestTicketDomain_StorePaymentReceipt(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
 
+		email := "johndoe+happy@example.com"
+		err := userDomain.CreateParticipant(ctx, main.CreateParticipantRequest{
+			Name:  "John Doe",
+			Email: email,
+		})
+		if err != nil {
+			t.Errorf("unexpected error: %s", err.Error())
+		}
+
 		// First attempt
-		err := ticketDomain.StorePaymentReceipt(ctx, "johndoe+update@example.com", strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."), "text/plain")
+		err = ticketDomain.StorePaymentReceipt(ctx, email, strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."), "text/plain")
 		if err != nil {
 			t.Errorf("unexpected error: %s", err.Error())
 		}
 
 		// Second attempt, should not return error
-		err = ticketDomain.StorePaymentReceipt(ctx, "johndoe+update@example.com", strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."), "text/plain")
+		err = ticketDomain.StorePaymentReceipt(ctx, email, strings.NewReader("Hello world! This is not a photo. Yet this will be a text file."), "text/plain")
 		if err != nil {
 			t.Errorf("unexpected error: %s", err.Error())
 		}

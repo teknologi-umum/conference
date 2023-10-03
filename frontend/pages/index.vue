@@ -13,8 +13,8 @@ useHead({
 const speakers = ref([
     {
         name: "Didiet Noor",
-        title: "Tanda-Tanda Kamu Punya Skill Issue",
-        description: "Developer bisa coding doang itu banyak. Banyak juga yang dilayoff. Saingan kamu banyak kalo cuma bisa coding.",
+        title: "Teks adalah Mitos",
+        description: "Akan berbicara mengenai teks, ascii, unicode, emoji, dan glif",
         image: didietImage,
     },
     {

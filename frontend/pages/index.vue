@@ -14,7 +14,7 @@ const speakers = ref([
     {
         name: "Didiet Noor",
         title: "Teks adalah Mitos",
-        description: "Akan berbicara mengenai teks, ascii, unicode, emoji, dan glif",
+        description: "Semua yang teman-teman ketahui tentang 'teks' hanyalah sebuah mitos. Akan berbicara dan membongkar khurafat mengenai teks, ascii, unicode, emoji, dan glif.",
         image: didietImage,
     },
     {
@@ -34,6 +34,12 @@ const speakers = ref([
         title: "Loving Rust not because of the performance",
         description: "Rust dikenal dengan bahasa pemrograman yang cepat. Namun sebenarnya ada sisi lain yang ditawarkan di Rust. Talk kali ini akan membahas apa saja hal yang ditawarkan oleh Rust selain kecepatan.",
         image: mustafaImage,
+    },
+    {
+      name: "Elfino Sitompul",
+      title: "Minimalism on Product Development: An Algobash Story",
+      description: "Menjadi developer yang produktif, cepat, efisien, dan dicintai oleh team. Menghilangkan hal-hal yang memperlambat proses product development, apalagi di Algobash.",
+      image: elfinoImage,
     }
 ]) 
 
@@ -82,7 +88,7 @@ const showVideo = ref(false)
             <div class="container | mx-auto px-5">
                 <h2 class="section-title | mb-24 text-center w-full leading-tight">Speakers</h2>
                 <div class="section-body">
-                    <div class="speakers | grid grid-cols-1 lg:grid-cols-4 gap-10">
+                    <div class="speakers | grid grid-cols-1 lg:grid-cols-3 gap-10">
                         <Card v-for="speaker in speakers" :key="speaker.name" :image_url="speaker.image" :title="speaker.name" :description="speaker.description"></Card>
                     </div>
                 </div>

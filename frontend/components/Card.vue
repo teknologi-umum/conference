@@ -8,7 +8,7 @@ defineProps({
 
 </script>
 <template>
-    <div class="card rounded-2xl bg-white bg-opacity-10 backdrop-blur-lg	">
+    <div class="card rounded-2xl bg-white bg-opacity-10 backdrop-blur-lg">
         <div class="card-image h-100" v-if="image_url">
             <img :src="image_url" :alt="`Photo of ${title}`" class="w-full h-full object-cover rounded-t-2xl mb-0">
         </div>

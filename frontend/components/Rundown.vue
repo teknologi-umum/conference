@@ -26,7 +26,7 @@ const events = ref([
         toHour: '16.00'
     },
     {
-        name: 'Surprise Workshop (soon)',
+        name: 'Minimalism on Product Development: An Algobash Story by Elfino Sitompul',
         fromHour: '16.05',
         toHour: '16.45'
     },
@@ -41,7 +41,7 @@ const events = ref([
         toHour: '18.15'
     },
     {
-        name: 'Tanda-Tanda Kamu Punya Skill Issue by Didiet Noor',
+        name: 'Teks Adalah Mitos by Didiet Noor',
         fromHour: '18.15',
         toHour: '18.45'
     },

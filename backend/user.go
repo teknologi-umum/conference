@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/jackc/pgx/v5"
@@ -40,6 +41,7 @@ type User struct {
 	Email       string
 	Type        Type
 	IsProcessed bool
+	CreatedAt   time.Time
 }
 
 func (c CreateParticipantRequest) validate() (errors []string) {
@@ -112,7 +114,7 @@ func (u *UserDomain) GetUsers(ctx context.Context, filter UserFilterRequest) ([]
 
 	rows, err := c.Query(
 		ctx,
-		"SELECT name, email, type, is_processed FROM users WHERE type = $1 AND is_processed = $2",
+		"SELECT name, email, type, is_processed, created_at FROM users WHERE type = $1 AND is_processed = $2",
 		filter.Type,
 		filter.IsProcessed,
 	)
@@ -124,7 +126,7 @@ func (u *UserDomain) GetUsers(ctx context.Context, filter UserFilterRequest) ([]
 	var users []User
 	for rows.Next() {
 		var user User
-		err := rows.Scan(&user.Name, &user.Email, &user.Type, &user.IsProcessed)
+		err := rows.Scan(&user.Name, &user.Email, &user.Type, &user.IsProcessed, &user.CreatedAt)
 		if err != nil {
 			return nil, err
 		}

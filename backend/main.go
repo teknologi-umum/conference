@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/flowchartsman/handlebars/v3"
@@ -508,12 +509,18 @@ func App() *cli.App {
 						return err
 					}
 
-					log.Info().Msg("List of participants")
+					w := tabwriter.NewWriter(os.Stdout, 1, 1, 1, ' ', tabwriter.TabIndent)
+					w.Write([]byte("Name\tEmail\tRegistered At\t"))
 					for _, user := range users {
-						log.Info().Msgf("%s - %s", user.Name, user.Email)
+						w.Write([]byte(fmt.Sprintf(
+							"%s\t%s\t%s\t",
+							user.Name,
+							user.Email,
+							user.CreatedAt.In(time.FixedZone("WIB", 7*60*60)).Format(time.Stamp),
+						)))
 					}
 
-					return nil
+					return w.Flush()
 				},
 			},
 			{

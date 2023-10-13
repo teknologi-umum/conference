@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type ServerConfig struct {
@@ -19,12 +20,14 @@ type ServerConfig struct {
 	TicketDomain              *TicketDomain
 	Environment               string
 	FeatureRegistrationClosed bool
+	ValidateTicketKey         string
 }
 
 type ServerDependency struct {
 	userDomain         *UserDomain
 	ticketDomain       *TicketDomain
 	registrationClosed bool
+	validateTicketKey  string
 }
 
 func NewServer(config *ServerConfig) *echo.Echo {
@@ -41,6 +44,7 @@ func NewServer(config *ServerConfig) *echo.Echo {
 		userDomain:         config.UserDomain,
 		ticketDomain:       config.TicketDomain,
 		registrationClosed: config.FeatureRegistrationClosed,
+		validateTicketKey:  config.ValidateTicketKey,
 	}
 
 	e := echo.New()
@@ -223,6 +227,7 @@ func (s *ServerDependency) UploadBuktiTransfer(c echo.Context) error {
 
 type DayTicketScanRequest struct {
 	Code string `json:"code"`
+	Key  string `json:"key"`
 }
 
 func (s *ServerDependency) DayTicketScan(c echo.Context) error {
@@ -238,6 +243,24 @@ func (s *ServerDependency) DayTicketScan(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{
 			"message":    "Invalid request body",
 			"errors":     err.Error(),
+			"request_id": requestId,
+		})
+	}
+
+	// Validate key
+	if err := bcrypt.CompareHashAndPassword([]byte(s.validateTicketKey), []byte(requestBody.Key)); err != nil {
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return c.JSON(http.StatusForbidden, echo.Map{
+				"message":    "Wrong passphrase",
+				"errors":     "",
+				"request_id": requestId,
+			})
+		}
+
+		sentryHub.CaptureException(err)
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"message":    "Internal server error",
+			"errors":     "Internal server error",
 			"request_id": requestId,
 		})
 	}

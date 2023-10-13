@@ -46,6 +46,7 @@ type Config struct {
 		ConferenceEmail                     string `yaml:"conference_email" envconfig:"EMAIL_TEMPLATE_CONFERENCE_EMAIL"`
 		BankAccounts                        string `yaml:"bank_accounts" envconfig:"EMAIL_TEMPLATE_BANK_ACCOUNTS"` // List of bank accounts for payments in HTML format
 	} `yaml:"email_template"`
+	ValidateTicketKey string `yaml:"validate_payment_key" envconfig:"VALIDATE_PAYMENT_KEY"`
 }
 
 func GetConfig(configurationFile string) (Config, error) {

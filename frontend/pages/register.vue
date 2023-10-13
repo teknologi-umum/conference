@@ -54,7 +54,7 @@ const submit = async () => {
             </form>
 
             <p class="mb-0!">Price: <span class="text-white glow">Rp 100.000</span> / seat</p>
-            <p>*Students get 25K discount </p>
+           <p>*Students can get a 25% discount or IDR 25.000,- terms and conditions applies</p>
 
             <h2 class="mb-5">Important Notice:</h2>
             <p class="mb-5!">TeknumConf team will not contact you and ask for payment from any other medium than email. You can validate it by:</p>

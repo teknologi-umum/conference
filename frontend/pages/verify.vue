@@ -6,28 +6,53 @@ useHead({
 import {QrcodeStream} from 'vue-qrcode-reader'
 const detectedUser = ref()
 const detectedUsers = ref([])
-const onDetect = (a: any) => {
-    detectedUser.value = {
-        name: 'Aji',
-        student: true,
-        institution: "PT Mencari Cinta Sejati"
+const key = ref([])
+const config = useRuntimeConfig();
+const alertClass = ref<null|boolean>(null);
+const paused = ref(false)
+const onDetect = async (a: any) => {
+    
+    const response = await useFetch(`${config.public.backendBaseUrl}/scan-tiket`, { 
+        method: "POST", 
+        body: {
+            code: a[0].rawValue,
+            key: key.value
+        }
+    });
+    paused.value = true
+
+    if (response.error.value?.statusCode && [406, 403].includes(response.error.value?.statusCode)) {
+        alertClass.value = false
+    } else {
+        alertClass.value = true
+        detectedUser.value = {
+            name: 'Aji',
+            student: true,
+            institution: "PT Mencari Cinta Sejati"
+        }
     }
-    // Fetching..
+    setTimeout(() => {
+        paused.value = false
+    }, 100);
 }
 const scanNext = () => {
     detectedUsers.value.push(detectedUser.value)
     detectedUser.value = null
 }
+
 </script>
 <template>
     <div id="page">
         <SinglePage title="Verify Guest">
-            <qrcode-stream v-if="!detectedUser" @detect="onDetect"></qrcode-stream>
+            <div :class="[`alert mb-5`, alertClass ? 'alert-success' : 'alert-danger']" v-if="alertClass !== null">
+                {{ alertClass ? 'User verified!' : 'Invalid ticket' }}
+            </div>
+            <template v-if="!detectedUser">
+                <input type="text" class="form-control-lg mb-5" placeholder="Key" v-model="key">
+                <qrcode-stream  @detect="onDetect" :paused="paused"></qrcode-stream>
+            </template>
             <div class="success" v-else>
                 <Card>
-                    <div class="alert alert-success mb-5">
-                        User Verified!
-                    </div>
                     <table class="table mb-5">
                         <tr class="text-center">
                             <td>Key</td>
@@ -46,6 +71,7 @@ const scanNext = () => {
                     </div>
                 </Card>
             </div>
+
         </SinglePage>
     </div>
 </template>

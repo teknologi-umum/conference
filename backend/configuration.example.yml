@@ -21,5 +21,7 @@ mailer:
 blob_url: file:///tmp/teknologi-umum-conference
 
 signature:
-    public_key: hex encoded string
-    private_key: hex encoded string
+  public_key: hex encoded string
+  private_key: hex encoded string
+
+validate_payment_key: some string

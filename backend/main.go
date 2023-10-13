@@ -138,6 +138,7 @@ func App() *cli.App {
 						TicketDomain:              ticketDomain,
 						Environment:               config.Environment,
 						FeatureRegistrationClosed: config.FeatureFlags.RegistrationClosed,
+						ValidateTicketKey:         config.ValidateTicketKey,
 					})
 
 					exitSig := make(chan os.Signal, 1)

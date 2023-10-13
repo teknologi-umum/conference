@@ -53,6 +53,9 @@ const submit = async () => {
                 <Btn size="lg">Save my spot</Btn>
             </form>
 
+            <p class="mb-0!">Price: <span class="text-white glow">Rp 100.000</span> / seat</p>
+            <p>*Students get 25K discount </p>
+
             <h2 class="mb-5">Important Notice:</h2>
             <p class="mb-5!">TeknumConf team will not contact you and ask for payment from any other medium than email. You can validate it by:</p>
             <ul class="mb-5 pl-5">
@@ -76,5 +79,8 @@ const submit = async () => {
     outline: none;
     background-color: #c1c1c128;
     border-color: #eeeeee;
+}
+.glow {
+    filter: drop-shadow(0 3px 2px rgba(255, 255, 255, 0.57))
 }
 </style>

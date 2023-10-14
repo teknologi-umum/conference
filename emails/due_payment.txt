@@ -1,0 +1,21 @@
+Hello, {{ name }} 👋
+
+Terima kasih atas antusias kamu terhadap TeknumConf 2023. Kami ingin mengingatkan Anda bahwa batas akhir pembayaran untuk acara TeknumConf 2023 adalah pada tanggal 14 October 2023. Ayo segera amankan tiket Anda sekarang👀.
+
+Bagaimana cara pembayaran tiketnya?
+Kamu hanya perlu melakukan transfer sebanyak Rp. 100.000,- ke salah satu rekening berikut:
+
+{{ bankAccounts }}
+
+Setelah melakukan pembayaran, jangan lupa unggah bukti pembayaran Anda di tautan berikut ini.
+
+Saya sudah bayar, kok saya dapat email ini?
+Mungkin kami salah, namun sebaiknya kamu segera konfirmasi lagi dengan cara membalas email ini. Kamu juga bisa upload ulang ke link bukti pembayaran diatas.
+
+Jika kamu memiliki pertanyaan, jangan ragu untuk menghubungi kami melalui email conference@teknologiumum.com.
+
+Sampai jumpa di Teknum Conference!
+
+Best regards,
+Reinaldy
+From the team at TeknumConf 2023

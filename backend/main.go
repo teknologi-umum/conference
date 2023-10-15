@@ -384,14 +384,14 @@ func App() *cli.App {
 					if err != nil {
 						log.Fatal().Err(err).Msg("failed to read html template")
 					}
-					
+
 					htmlTemplate, err := handlebars.Parse(string(htmlContent))
 					if err != nil {
 						log.Fatal().Err(err).Msg("failed to parse html template")
 					}
-					
+
 					var userList []User
-					
+
 					if mailCsv != "" {
 						emailList, err := os.ReadFile(mailCsv)
 						if err != nil {
@@ -407,7 +407,7 @@ func App() *cli.App {
 							Email: singleRecipient,
 						})
 					}
-					
+
 					var icsContent []byte
 					if icsBody != "" {
 						icsContent, err = os.ReadFile(icsBody)
@@ -424,13 +424,13 @@ func App() *cli.App {
 					})
 
 					attachments := []Attachment{}
-					if (icsContent != nil){
-						attachments := append(attachments, Attachment{
+					if icsContent != nil {
+						attachments = append(attachments, Attachment{
 							ContentDisposition: ContentDispositionAttachment,
-							Name: "invite.ics",
-							Description: "Invitation",
-							ContentType: "application/ics",
-							Payload: icsBody,
+							Name:               "invite.ics",
+							Description:        "Invitation",
+							ContentType:        "application/ics",
+							Payload:            icsContent,
 						})
 					}
 
@@ -441,7 +441,7 @@ func App() *cli.App {
 							Subject:        subject,
 							PlainTextBody:  string(plaintextContent),
 							HtmlBody:       string(htmlContent),
-							Attachments
+							Attachments:    attachments,
 						}
 
 						// Parse email template information

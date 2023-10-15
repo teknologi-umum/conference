@@ -18,15 +18,15 @@ environment: local
 database:
   host: localhost
   port: 5432
-  user: postgres
-  password: postgres
-  database: postgres
+  user: conference
+  password: VeryStrongPassword
+  database: conference
 
 port: 8080
 
 mailer:
   hostname: localhost
-  port: 25
+  port: 1025
   from: administrator@localhost
   password:
 
@@ -36,7 +36,7 @@ signature:
   public_key: 2bb6b9b9e1d9e12bfdd4196bfba6a081156ac...
   private_key: 48d0ca64011fec1cb23b21820e9f7e880843e71f236b7f8decfe3568f...
 
-validate_payment_key: $2a$09$u45aXHCT7.almeYWKgPIVeQO6w6rdp7Y...
+validate_payment_key: 24326124313024514d56324d782f4a7342446f36363653784b324175657341...
 ```
 
 Generate the `signature.public_key` and `signature.private_key` using this simple Go script:

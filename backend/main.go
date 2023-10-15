@@ -305,6 +305,12 @@ func App() *cli.App {
 						Required: true,
 					},
 					&cli.StringFlag{
+						Name:     "ics-body",
+						Value:    "",
+						Usage:    "Path to ICS body file",
+						Required: true,
+					},
+					&cli.StringFlag{
 						Name:     "recipients",
 						Value:    "",
 						Usage:    "Path to CSV file containing list of emails",
@@ -316,8 +322,8 @@ func App() *cli.App {
 						Required: false,
 					},
 				},
-				Usage:     "blast-email [subject] [template-plaintext] [template-html-body] [csv-file list destination of emails]",
-				ArgsUsage: "[subject] [template-plaintext] [template-html-body] [path-csv-file]",
+				Usage:     "blast-email [subject] [template-plaintext] [template-html-body] [attachment-ics-body] [csv-file list destination of emails]",
+				ArgsUsage: "[subject] [template-plaintext] [template-html-body] [attachment-ics-body] [path-csv-file]",
 				Action: func(cCtx *cli.Context) error {
 					config, err := GetConfig(cCtx.String("config-file-path"))
 					if err != nil {
@@ -349,6 +355,7 @@ func App() *cli.App {
 					htmlBody := cCtx.String("html-body")
 					mailCsv := cCtx.String("recipients")
 					singleRecipient := cCtx.String("single-recipient")
+					icsBody := cCtx.String("ics-body")
 
 					if subject == "" {
 						log.Fatal().Msg("Subject is required")
@@ -377,14 +384,14 @@ func App() *cli.App {
 					if err != nil {
 						log.Fatal().Err(err).Msg("failed to read html template")
 					}
-
+					
 					htmlTemplate, err := handlebars.Parse(string(htmlContent))
 					if err != nil {
 						log.Fatal().Err(err).Msg("failed to parse html template")
 					}
-
+					
 					var userList []User
-
+					
 					if mailCsv != "" {
 						emailList, err := os.ReadFile(mailCsv)
 						if err != nil {
@@ -400,6 +407,14 @@ func App() *cli.App {
 							Email: singleRecipient,
 						})
 					}
+					
+					var icsContent []byte
+					if icsBody != "" {
+						icsContent, err = os.ReadFile(icsBody)
+						if err != nil {
+							log.Fatal().Err(err).Msg("failed to read ics attachment")
+						}
+					}
 
 					mailSender := NewMailSender(&MailConfiguration{
 						SmtpHostname: config.Mailer.Hostname,
@@ -408,6 +423,17 @@ func App() *cli.App {
 						SmtpPassword: config.Mailer.Password,
 					})
 
+					attachments := []Attachment{}
+					if (icsContent != nil){
+						attachments := append(attachments, Attachment{
+							ContentDisposition: ContentDispositionAttachment,
+							Name: "invite.ics",
+							Description: "Invitation",
+							ContentType: "application/ics",
+							Payload: icsBody,
+						})
+					}
+
 					for _, user := range userList {
 						mail := &Mail{
 							RecipientName:  user.Name,
@@ -415,6 +441,7 @@ func App() *cli.App {
 							Subject:        subject,
 							PlainTextBody:  string(plaintextContent),
 							HtmlBody:       string(htmlContent),
+							Attachments
 						}
 
 						// Parse email template information

@@ -88,7 +88,7 @@ func (m *Mailer) messageBuilder(ctx context.Context, mail *Mail) []byte {
 	msg.WriteString("Content-Transfer-Encoding: 8bit\n")
 	msg.WriteString("\n")
 	msg.WriteString(mail.PlainTextBody)
-	msg.WriteString("\n")
+	msg.WriteString("\n\n")
 	msg.WriteString("--" + alternateBoundary + "\n")
 	msg.WriteString("Content-Type: text/html; charset=\"utf-8\"\n")
 	msg.WriteString("Content-Transfer-Encoding: 8bit\n")

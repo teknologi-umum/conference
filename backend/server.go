@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"errors"
 	"mime"
 	"net/http"
@@ -248,7 +249,17 @@ func (s *ServerDependency) DayTicketScan(c echo.Context) error {
 	}
 
 	// Validate key
-	if err := bcrypt.CompareHashAndPassword([]byte(s.validateTicketKey), []byte(requestBody.Key)); err != nil {
+	decodedPassphrase, err := hex.DecodeString(s.validateTicketKey)
+	if err != nil {
+		sentryHub.CaptureException(err)
+		return c.JSON(http.StatusInternalServerError, echo.Map{
+			"message":    "Internal server error",
+			"errors":     "Internal server error",
+			"request_id": requestId,
+		})
+	}
+
+	if err := bcrypt.CompareHashAndPassword(decodedPassphrase, []byte(requestBody.Key)); err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 			return c.JSON(http.StatusForbidden, echo.Map{
 				"message":    "Wrong passphrase",

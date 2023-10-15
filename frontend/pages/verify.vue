@@ -10,8 +10,8 @@ const key = ref([])
 const config = useRuntimeConfig();
 const alertClass = ref<null|boolean>(null);
 const paused = ref(false)
+const invalidTicketReason = ref<string>("");
 const onDetect = async (a: any) => {
-    
     const response = await useFetch(`${config.public.backendBaseUrl}/scan-tiket`, { 
         method: "POST", 
         body: {
@@ -23,12 +23,14 @@ const onDetect = async (a: any) => {
 
     if (response.error.value?.statusCode && [406, 403].includes(response.error.value?.statusCode)) {
         alertClass.value = false
+        invalidTicketReason.value = response.error.value?.data.errors;
     } else {
+        const body = response.data.value;
         alertClass.value = true
         detectedUser.value = {
-            name: 'Aji',
-            student: true,
-            institution: "PT Mencari Cinta Sejati"
+            name: body.name,
+            student: body.student,
+            email: body.email,
         }
     }
     setTimeout(() => {
@@ -45,7 +47,7 @@ const scanNext = () => {
     <div id="page">
         <SinglePage title="Verify Guest">
             <div :class="[`alert mb-5`, alertClass ? 'alert-success' : 'alert-danger']" v-if="alertClass !== null">
-                {{ alertClass ? 'User verified!' : 'Invalid ticket' }}
+                {{ alertClass ? 'User verified!' : invalidTicketReason }}
             </div>
             <template v-if="!detectedUser">
                 <input type="text" class="form-control-lg mb-5" placeholder="Key" v-model="key">

@@ -39,11 +39,11 @@ services:
       options:
         max-size: 10M
 
-  mailhog:
-    image: mailhog/mailhog:latest
+  mailcrab:
+    image: marlonb/mailcrab:latest
     ports:
       - 127.0.0.1:1025:1025
-      - 127.0.0.1:8025:8025
+      - 127.0.0.1:8025:1080
     deploy:
       mode: replicated
       replicas: 1
@@ -94,7 +94,7 @@ services:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy
-      mailhog:
+      mailcrab:
         condition: service_started
     logging:
       driver: local

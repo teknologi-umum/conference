@@ -1,0 +1,27 @@
+feature_flags:
+  registration_closed: false
+
+environment: local
+
+database:
+  host: localhost
+  port: 5432
+  user: conference
+  password: VeryStrongPassword
+  database: conference
+
+port: 8080
+
+mailer:
+  hostname: localhost
+  port: 1025
+  from: administrator@localhost
+  password:
+
+blob_url: file:///tmp/teknologi-umum-conference
+
+signature:
+  public_key: 2bb6b9b9e1d9e12bfdd4196bfba6a081156ac43f480e00c301ad39ae68362cf0
+  private_key: 48d0ca64011fec1cb23b21820e9f7e880843e71f236b7f8decfe3568f303b2f02bb6b9b9e1d9e12bfdd4196bfba6a081156ac43f480e00c301ad39ae68362cf0
+
+validate_payment_key: 24326124313024514d56324d782f4a7342446f36363653784b3241756573417164306343754977566d3164376c774a347144716271376f654d704a4b

@@ -1,0 +1,5 @@
+Hi, {{ name }}
+
+Reinaldy's here. I know it's been a while since we opened the TeknumConf registration. But, I'm here to tell you we're closing the registration period and the payment. So, if you paid before the 18th of October and haven't gotten a ticket yet, we'll send you the ticket on the 20th of October. If you made payment after the 18th of October, we'll refund your payment.
+
+Best regards, Reinaldy From the team at TeknumConf 2023

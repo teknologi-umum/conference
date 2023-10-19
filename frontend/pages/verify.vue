@@ -11,8 +11,14 @@ const config = useRuntimeConfig();
 const alertClass = ref<null|boolean>(null);
 const paused = ref(false)
 const invalidTicketReason = ref<string>("");
+interface ScanResponse {
+    message: string
+    student: boolean
+    name: string
+    email: string
+}
 const onDetect = async (a: any) => {
-    const response = await useFetch(`${config.public.backendBaseUrl}/scan-tiket`, { 
+    const response = await useFetch<ScanResponse>(`${config.public.backendBaseUrl}/scan-tiket`, { 
         method: "POST", 
         body: {
             code: a[0].rawValue,
@@ -28,9 +34,9 @@ const onDetect = async (a: any) => {
         const body = response.data.value;
         alertClass.value = true
         detectedUser.value = {
-            name: body.name,
-            student: body.student,
-            email: body.email,
+            name: body?.name,
+            student: body?.student,
+            email: body?.email,
         }
     }
     setTimeout(() => {

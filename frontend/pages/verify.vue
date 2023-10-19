@@ -10,9 +10,16 @@ const key = ref([])
 const config = useRuntimeConfig();
 const alertClass = ref<null|boolean>(null);
 const paused = ref(false)
+
+interface ScanResponse {
+    message: string
+    student: boolean
+    name: string
+    email: string
+}
 const onDetect = async (a: any) => {
     
-    const response = await useFetch(`${config.public.backendBaseUrl}/scan-tiket`, { 
+    const response = await useFetch<ScanResponse>(`${config.public.backendBaseUrl}/scan-tiket`, { 
         method: "POST", 
         body: {
             code: a[0].rawValue,
@@ -26,9 +33,9 @@ const onDetect = async (a: any) => {
     } else {
         alertClass.value = true
         detectedUser.value = {
-            name: 'Aji',
-            student: true,
-            institution: "PT Mencari Cinta Sejati"
+            name: response.data.value?.name,
+            student: response.data.value?.student,
+            email: response.data.value?.email
         }
     }
     setTimeout(() => {
@@ -53,7 +60,7 @@ const scanNext = () => {
             </template>
             <div class="success" v-else>
                 <Card>
-                    <table class="table mb-5">
+                    <table class="table w-full mb-5">
                         <tr class="text-center">
                             <td>Key</td>
                             <td>Value</td>

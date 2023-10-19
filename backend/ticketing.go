@@ -350,7 +350,7 @@ func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (email 
 		return "", "", false, ErrInvalidTicket
 	}
 
-	ticketId, err := uuid.FromBytes(rawTicketId)
+	ticketId, err := uuid.ParseBytes(rawTicketId)
 	if err != nil {
 		return "", "", false, ErrInvalidTicket
 	}
@@ -380,20 +380,20 @@ func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (email 
 
 	tx, err := conn.BeginTx(ctx, pgx.TxOptions{
 		IsoLevel:   pgx.RepeatableRead,
-		AccessMode: pgx.ReadOnly,
+		AccessMode: pgx.ReadWrite,
 	})
 	if err != nil {
 		return "", "", false, fmt.Errorf("creating transaction: %w", err)
 	}
 
-	err = tx.QueryRow(ctx, "SELECT email, student FROM ticketing WHERE id = $1", ticketId).Scan(&email, &student)
+	err = tx.QueryRow(ctx, "SELECT email, student FROM ticketing WHERE id = $1 AND used = FALSE", ticketId).Scan(&email, &student)
 	if err != nil {
 		if e := tx.Rollback(ctx); e != nil {
 			return "", "", false, fmt.Errorf("rolling back transaction: %w (%s)", e, err.Error())
 		}
 
 		if errors.Is(err, pgx.ErrNoRows) {
-			return "", "", false, ErrInvalidTicket
+			return "", "", false, fmt.Errorf("%w (id not exists, or ticket has been used)", ErrInvalidTicket)
 		}
 
 		return "", "", false, fmt.Errorf("acquiring data from table: %w", err)

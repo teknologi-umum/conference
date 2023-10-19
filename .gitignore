@@ -411,3 +411,4 @@ cython_debug/
 
 ./backend/*.sh
 !./backend/blast-email.sh
+./backend/configuration.yml

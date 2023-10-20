@@ -62,11 +62,11 @@ if __name__ == "__main__":
                 print(f"{filename} already got text counterpart")
                 continue
 
-            with open(filename) as html_file:
+            with open(filename, "r", encoding='utf-8') as html_file:
                 file_content = html_file.read()
                 removed_tags = strip_tags(file_content)
 
-                with open(raw_filename + ".txt", "w") as text_file:
+                with open(raw_filename + ".txt", "w", encoding='utf-8') as text_file:
                     text_file.write(removed_tags)
 
                 print(f"Removed HTML tags for {raw_filename}")

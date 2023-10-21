@@ -54,7 +54,7 @@ func NewServer(config *ServerConfig) *echo.Echo {
 	e.Use(sentryMiddleware)
 
 	// NOTE: Only need to handle CORS, everything else is being handled by the API gateway
-	corsAllowedOrigins := []string{"https://conf.teknologiumum.com"}
+	corsAllowedOrigins := []string{"https://conference.teknologiumum.com"}
 	if config.Environment != "production" {
 		corsAllowedOrigins = append(corsAllowedOrigins, "http://localhost:3000")
 	}

@@ -9,7 +9,7 @@ export default defineNuxtConfig({
       eventSchedule: true,
       aggressiveIntroduction: true,
       fifaChampionship: false,
-      backendBaseUrl: process.env.NODE_ENV === "development" ? "http://localhost:8080" : "https://conf.teknologiumum.com/api",
+      backendBaseUrl: process.env.NODE_ENV === "development" ? "http://localhost:8080" : "https://conference.teknologiumum.com/api",
       sentryDSN: process.env.SENTRY_DSN,
     }
   },

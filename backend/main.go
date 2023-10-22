@@ -305,6 +305,12 @@ func App() *cli.App {
 						Required: true,
 					},
 					&cli.StringFlag{
+						Name:     "ics-body",
+						Value:    "",
+						Usage:    "Path to ICS body file",
+						Required: true,
+					},
+					&cli.StringFlag{
 						Name:     "recipients",
 						Value:    "",
 						Usage:    "Path to CSV file containing list of emails",
@@ -316,8 +322,8 @@ func App() *cli.App {
 						Required: false,
 					},
 				},
-				Usage:     "blast-email [subject] [template-plaintext] [template-html-body] [csv-file list destination of emails]",
-				ArgsUsage: "[subject] [template-plaintext] [template-html-body] [path-csv-file]",
+				Usage:     "blast-email [subject] [template-plaintext] [template-html-body] [attachment-ics-body] [csv-file list destination of emails]",
+				ArgsUsage: "[subject] [template-plaintext] [template-html-body] [attachment-ics-body] [path-csv-file]",
 				Action: func(cCtx *cli.Context) error {
 					config, err := GetConfig(cCtx.String("config-file-path"))
 					if err != nil {
@@ -349,6 +355,7 @@ func App() *cli.App {
 					htmlBody := cCtx.String("html-body")
 					mailCsv := cCtx.String("recipients")
 					singleRecipient := cCtx.String("single-recipient")
+					icsBody := cCtx.String("ics-body")
 
 					if subject == "" {
 						log.Fatal().Msg("Subject is required")
@@ -401,12 +408,31 @@ func App() *cli.App {
 						})
 					}
 
+					var icsContent []byte
+					if icsBody != "" {
+						icsContent, err = os.ReadFile(icsBody)
+						if err != nil {
+							log.Fatal().Err(err).Msg("failed to read ics attachment")
+						}
+					}
+
 					mailSender := NewMailSender(&MailConfiguration{
 						SmtpHostname: config.Mailer.Hostname,
 						SmtpPort:     config.Mailer.Port,
 						SmtpFrom:     config.Mailer.From,
 						SmtpPassword: config.Mailer.Password,
 					})
+
+					attachments := []Attachment{}
+					if icsContent != nil {
+						attachments = append(attachments, Attachment{
+							ContentDisposition: ContentDispositionAttachment,
+							Name:               "invite.ics",
+							Description:        "Invitation",
+							ContentType:        "application/ics",
+							Payload:            icsContent,
+						})
+					}
 
 					for _, user := range userList {
 						mail := &Mail{
@@ -415,6 +441,7 @@ func App() *cli.App {
 							Subject:        subject,
 							PlainTextBody:  string(plaintextContent),
 							HtmlBody:       string(htmlContent),
+							Attachments:    attachments,
 						}
 
 						// Parse email template information

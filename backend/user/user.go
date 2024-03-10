@@ -3,25 +3,30 @@ package user
 import (
 	"context"
 	"encoding/csv"
+	"fmt"
 	"os"
 	"strconv"
 	"time"
 
+	"conf/nocodb"
 	"github.com/getsentry/sentry-go"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type UserDomain struct {
-	db *pgxpool.Pool
+	db      *nocodb.Client
+	tableId string
 }
 
-func NewUserDomain(db *pgxpool.Pool) *UserDomain {
+func NewUserDomain(db *nocodb.Client, tableId string) (*UserDomain, error) {
 	if db == nil {
-		panic("db is nil")
+		return nil, fmt.Errorf("db is nil")
 	}
 
-	return &UserDomain{db: db}
+	if tableId == "" {
+		return nil, fmt.Errorf("tableId is empty")
+	}
+
+	return &UserDomain{db: db, tableId: tableId}, nil
 }
 
 type Type string
@@ -64,34 +69,17 @@ func (u *UserDomain) CreateParticipant(ctx context.Context, req CreateParticipan
 		return &ValidationError{Errors: errors}
 	}
 
-	c, err := u.db.Acquire(ctx)
-	if err != nil {
-		return err
-	}
-	defer c.Release()
-
-	t, err := c.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
-	if err != nil {
-		return err
+	user := User{
+		Name:        req.Name,
+		Email:       req.Email,
+		Type:        TypeParticipant,
+		IsProcessed: false,
+		CreatedAt:   time.Now(),
 	}
 
-	_, err = t.Exec(
-		ctx,
-		"INSERT INTO users (name, email, type) VALUES ($1, $2, $3)",
-		req.Name,
-		req.Email,
-		TypeParticipant,
-	)
+	err := u.db.CreateTableRecords(ctx, u.tableId, []any{user})
 	if err != nil {
-		if e := t.Rollback(ctx); e != nil {
-			return e
-		}
-		return err
-	}
-
-	err = t.Commit(ctx)
-	if err != nil {
-		return err
+		return fmt.Errorf("creating table records: %w", err)
 	}
 
 	return nil
@@ -106,31 +94,24 @@ func (u *UserDomain) GetUsers(ctx context.Context, filter UserFilterRequest) ([]
 	span := sentry.StartSpan(ctx, "user.get_users")
 	defer span.Finish()
 
-	c, err := u.db.Acquire(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer c.Release()
-
-	rows, err := c.Query(
-		ctx,
-		"SELECT name, email, type, is_processed, created_at FROM users WHERE type = $1 AND is_processed = $2",
-		filter.Type,
-		filter.IsProcessed,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
 	var users []User
-	for rows.Next() {
-		var user User
-		err := rows.Scan(&user.Name, &user.Email, &user.Type, &user.IsProcessed, &user.CreatedAt)
+	var offset int64
+	for {
+		var currentUserSets []User
+		pageInfo, err := u.db.ListTableRecords(ctx, u.tableId, &currentUserSets, nocodb.ListTableRecordOptions{
+			Offset: offset,
+			Where:  fmt.Sprintf("(Type,eq,%s)~and(IsProcessed,eq,%s)", filter.Type, strconv.FormatBool(filter.IsProcessed)),
+		})
 		if err != nil {
-			return nil, err
+			return users, fmt.Errorf("list table records: %w", err)
 		}
-		users = append(users, user)
+
+		offset += int64(len(currentUserSets))
+		users = append(users, currentUserSets...)
+
+		if pageInfo.IsLastPage {
+			break
+		}
 	}
 
 	return users, nil
@@ -165,7 +146,13 @@ func (u *UserDomain) ExportUnprocessedUsersAsCSV(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer csvFile.Close()
+	defer func(csvFile *os.File) {
+		err := csvFile.Close()
+		if err != nil {
+			sentry.GetHubFromContext(ctx).Scope().SetLevel(sentry.LevelWarning)
+			sentry.GetHubFromContext(ctx).CaptureException(err)
+		}
+	}(csvFile)
 
 	csvWriter := csv.NewWriter(csvFile)
 	defer csvWriter.Flush()

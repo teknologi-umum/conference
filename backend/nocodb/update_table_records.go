@@ -9,16 +9,20 @@ import (
 	"net/url"
 )
 
-// CreateTableRecords allows the creation of new records within a specified table. Records to be inserted are input as
-// an array of key-value pair objects, where each key corresponds to a field name. Ensure that all the required fields
-// are included in the payload, with exceptions for fields designated as auto-increment or those having default values.
+// UpdateTableRecords allows updating existing records within a specified table identified by an array of Record-IDs,
+// serving as unique identifier for the record. Records to be updated are input as an array of key-value pair objects,
+// where each key corresponds to a field name. Ensure that all the required fields are included in the payload, with
+// exceptions for fields designated as auto-increment or those having default values.
 //
-// When dealing with 'Links' or 'Link To Another Record' field types, you should utilize the 'Create Link' API to insert
-// relevant data.
+// When dealing with 'Links' or 'Link To Another Record' field types, you should utilize the 'Create Link' API to
+// insert relevant data.
 //
 // Certain read-only field types will be disregarded if included in the request. These field types include 'Look Up,'
 // 'Roll Up,' 'Formula,' 'Auto Number,' 'Created By,' 'Updated By,' 'Created At,' 'Updated At,' 'Barcode,' and 'QR Code.'
-func (c *Client) CreateTableRecords(ctx context.Context, tableId string, records []any) error {
+//
+// Note that a PATCH request only updates the specified fields while leaving other fields unaffected. Currently,
+// PUT requests are not supported by this endpoint.
+func (c *Client) UpdateTableRecords(ctx context.Context, tableId string, records []any) error {
 	requestUrl, err := url.Parse(c.baseUrl + "/api/v2/tables/" + tableId + "/records")
 	if err != nil {
 		return fmt.Errorf("parsing url: %w", err)
@@ -29,7 +33,7 @@ func (c *Client) CreateTableRecords(ctx context.Context, tableId string, records
 		return fmt.Errorf("marshaling records: %w", err)
 	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, requestUrl.String(), bytes.NewReader(requestBody))
+	request, err := http.NewRequestWithContext(ctx, http.MethodPatch, requestUrl.String(), bytes.NewReader(requestBody))
 	if err != nil {
 		return fmt.Errorf("creating request: %w", err)
 	}

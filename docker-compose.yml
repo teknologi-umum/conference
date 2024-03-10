@@ -3,20 +3,12 @@
 #   Please don't directly use this configuration for production deployment.
 
 services:
-  postgres:
-    image: postgres:15.3-bookworm
+  # DO NOT use this version of NocoDB if you are deploying this to production.
+  # Always use their SaaS offering.
+  nocodb:
+    image: nocodb/nocodb:latest
     ports:
-      - 127.0.0.1:5432:5432
-    environment:
-      POSTGRES_PASSWORD: VeryStrongPassword
-      POSTGRES_USER: conference
-      POSTGRES_DB: conference
-      TZ: UTC
-    healthcheck:
-      test: pg_isready
-      interval: 30s
-      timeout: 20s
-      retries: 10
+      - 127.0.0.1:8080:8080
     deploy:
       mode: replicated
       replicas: 1
@@ -27,17 +19,10 @@ services:
         window: 120s
       resources:
         limits:
-          memory: 2GB
-          cpus: '2'
-        reservations:
-          memory: 50MB
-          cpus: '0.10'
+          memory: 500MB
+          cpus: '1'
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-    logging:
-      driver: local
-      options:
-        max-size: 10M
+      - nocodb-data:/usr/app/data/
 
   mailcrab:
     image: marlonb/mailcrab:latest
@@ -114,4 +99,4 @@ services:
         max-size: 10M
 
 volumes:
-  postgres-data:
+  nocodb-data:

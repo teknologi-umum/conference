@@ -1,4 +1,4 @@
-package main
+package ticketing
 
 import (
 	"bytes"
@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"conf/mailer"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -23,18 +25,15 @@ import (
 	"gocloud.dev/blob"
 )
 
-var ErrInvalidTicket = errors.New("invalid ticket")
-var ErrUserEmailNotFound = errors.New("user email not found")
-
 type TicketDomain struct {
 	db         *pgxpool.Pool
 	bucket     *blob.Bucket
 	privateKey *ed25519.PrivateKey
 	publicKey  *ed25519.PublicKey
-	mailer     *Mailer
+	mailer     *mailer.Mailer
 }
 
-func NewTicketDomain(db *pgxpool.Pool, bucket *blob.Bucket, privateKey ed25519.PrivateKey, publicKey ed25519.PublicKey, mailer *Mailer) (*TicketDomain, error) {
+func NewTicketDomain(db *pgxpool.Pool, bucket *blob.Bucket, privateKey ed25519.PrivateKey, publicKey ed25519.PublicKey, mailer *mailer.Mailer) (*TicketDomain, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
@@ -233,7 +232,7 @@ func (t *TicketDomain) ValidatePaymentReceipt(ctx context.Context, email string)
 	imageCid, _, _ := strings.Cut(uuid.NewString(), "-")
 
 	// Send email programmatically
-	err = t.mailer.Send(ctx, &Mail{
+	err = t.mailer.Send(ctx, &mailer.Mail{
 		RecipientName:  "",
 		RecipientEmail: email,
 		Subject:        "TeknumConf 2023: Tiket Anda!",
@@ -290,12 +289,12 @@ harap abaikan email ini. Terima kasih!`,
     </body>
 </html>
 `,
-		Attachments: []Attachment{
+		Attachments: []mailer.Attachment{
 			{
 				Name:               "qrcode_ticket.png",
 				Description:        "QR code ticket TeknumConf 2023",
 				ContentType:        "image/png",
-				ContentDisposition: ContentDispositionInline,
+				ContentDisposition: mailer.ContentDispositionInline,
 				ContentId:          imageCid,
 				SHA256Checksum:     sha256Sum,
 				Payload:            qrImage,

@@ -2,18 +2,16 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"encoding/hex"
-	"errors"
 	"fmt"
-	"net"
-	"net/http"
 	"os"
-	"os/signal"
 	"strings"
 	"text/tabwriter"
 	"time"
 
+	"conf/mailer"
+	"conf/ticketing"
+	"conf/user"
 	"github.com/flowchartsman/handlebars/v3"
 	"github.com/urfave/cli/v2"
 
@@ -42,246 +40,12 @@ func App() *cli.App {
 		},
 		Commands: []*cli.Command{
 			{
-				Name: "server",
-				Action: func(cCtx *cli.Context) error {
-					config, err := GetConfig(cCtx.String("config-file-path"))
-					if err != nil {
-						return fmt.Errorf("failed to get config: %w", err)
-					}
-
-					err = sentry.Init(sentry.ClientOptions{
-						Dsn:              "",
-						Debug:            config.Environment != "production",
-						AttachStacktrace: true,
-						SampleRate:       1.0,
-						EnableTracing:    true,
-						TracesSampler: func(ctx sentry.SamplingContext) float64 {
-							if ctx.Span.Name == "GET /ping" {
-								return 0
-							}
-
-							return 0.2
-						},
-						Release:     version,
-						Environment: config.Environment,
-						DebugWriter: log.Logger,
-						BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-							if config.Environment != "production" {
-								log.Debug().Interface("exceptions", event.Exception).Msg(event.Message)
-							}
-
-							return event
-						},
-					})
-					if err != nil {
-						return fmt.Errorf("initializing Sentry: %w", err)
-					}
-					defer sentry.Flush(time.Minute)
-
-					pgxRawConfig, err := pgxpool.ParseConfig(fmt.Sprintf(
-						"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
-						config.Database.User,
-						config.Database.Password,
-						config.Database.Host,
-						config.Database.Port,
-						config.Database.Name,
-					))
-					if err != nil {
-						log.Fatal().Err(err).Msg("Parsing connection string configuration")
-					}
-
-					pgxConfig := pgxRawConfig.Copy()
-
-					pgxConfig.ConnConfig.Tracer = &PGXTracer{}
-
-					conn, err := pgxpool.NewWithConfig(cCtx.Context, pgxConfig)
-					if err != nil {
-						log.Fatal().Err(err).Msg("failed to connect to database")
-					}
-					defer conn.Close()
-
-					bucket, err := blob.OpenBucket(context.Background(), config.BlobUrl)
-					if err != nil {
-						return fmt.Errorf("opening bucket: %w", err)
-					}
-					defer func() {
-						err := bucket.Close()
-						if err != nil {
-							log.Warn().Err(err).Msg("Closing bucket")
-						}
-					}()
-
-					signaturePrivateKey, err := hex.DecodeString(config.Signature.PrivateKey)
-					if err != nil {
-						return fmt.Errorf("invalid signature private key: %w", err)
-					}
-
-					signaturePublicKey, err := hex.DecodeString(config.Signature.PublicKey)
-					if err != nil {
-						return fmt.Errorf("invalid signature public key: %w", err)
-					}
-
-					mailer := NewMailSender(&MailConfiguration{
-						SmtpHostname: config.Mailer.Hostname,
-						SmtpPort:     config.Mailer.Port,
-						SmtpFrom:     config.Mailer.From,
-						SmtpPassword: config.Mailer.Password,
-					})
-
-					ticketDomain, err := NewTicketDomain(conn, bucket, signaturePrivateKey, signaturePublicKey, mailer)
-					if err != nil {
-						return fmt.Errorf("creating ticket domain: %w", err)
-					}
-
-					httpServer := NewServer(&ServerConfig{
-						UserDomain:                NewUserDomain(conn),
-						TicketDomain:              ticketDomain,
-						Environment:               config.Environment,
-						FeatureRegistrationClosed: config.FeatureFlags.RegistrationClosed,
-						ValidateTicketKey:         config.ValidateTicketKey,
-					})
-
-					exitSig := make(chan os.Signal, 1)
-					signal.Notify(exitSig, os.Interrupt, os.Kill)
-
-					go func() {
-						<-exitSig
-						ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-						defer cancel()
-
-						if err := httpServer.Shutdown(ctx); err != nil {
-							log.Error().Err(err).Msg("failed to shutdown server")
-						}
-					}()
-
-					if err := httpServer.Start(net.JoinHostPort("", config.Port)); err != nil && !errors.Is(err, http.ErrServerClosed) {
-						log.Fatal().Err(err).Msg("failed to start server")
-					}
-
-					return nil
-				},
+				Name:   "server",
+				Action: ServerHandlerAction,
 			},
 			{
-				Name: "migrate",
-				Action: func(cCtx *cli.Context) error {
-					config, err := GetConfig(cCtx.String("config-file-path"))
-					if err != nil {
-						return fmt.Errorf("failed to get config: %w", err)
-					}
-
-					err = sentry.Init(sentry.ClientOptions{
-						Dsn:              "",
-						Debug:            config.Environment != "production",
-						AttachStacktrace: true,
-						SampleRate:       1.0,
-						Release:          version,
-						Environment:      config.Environment,
-						DebugWriter:      log.Logger,
-						BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-							if config.Environment != "production" {
-								log.Debug().Interface("exceptions", event.Exception).Msg(event.Message)
-							}
-
-							return event
-						},
-					})
-					if err != nil {
-						return fmt.Errorf("initializing Sentry: %w", err)
-					}
-
-					conn, err := sql.Open(
-						"pgx",
-						fmt.Sprintf(
-							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
-							config.Database.User,
-							config.Database.Password,
-							config.Database.Host,
-							config.Database.Port,
-							config.Database.Name,
-						))
-					if err != nil {
-						return fmt.Errorf("failed to connect to database: %w", err)
-					}
-					defer func() {
-						err := conn.Close()
-						if err != nil {
-							log.Warn().Err(err).Msg("Closing database")
-						}
-					}()
-
-					migration, err := NewMigration(conn)
-					if err != nil {
-						return fmt.Errorf("failed to create migration: %w", err)
-					}
-
-					switch cCtx.Args().First() {
-					case "down":
-						err := migration.Down(cCtx.Context)
-						if err != nil {
-							return fmt.Errorf("executing down migration: %w", err)
-						}
-					case "up":
-						fallthrough
-					default:
-						err := migration.Up(cCtx.Context)
-						if err != nil {
-							return fmt.Errorf("executing up migration: %w", err)
-						}
-					}
-
-					log.Info().Msg("Migration succeed")
-
-					return nil
-				},
-			},
-			{
-				Name: "dump-attendees",
-				Action: func(cCtx *cli.Context) error {
-					config, err := GetConfig(cCtx.String("config-file-path"))
-					if err != nil {
-						return fmt.Errorf("failed to get config: %w", err)
-					}
-
-					err = sentry.Init(sentry.ClientOptions{
-						Dsn:              "",
-						Debug:            config.Environment != "production",
-						AttachStacktrace: true,
-						SampleRate:       1.0,
-						Release:          version,
-						Environment:      config.Environment,
-						DebugWriter:      log.Logger,
-						BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
-							if config.Environment != "production" {
-								log.Debug().Interface("exceptions", event.Exception).Msg(event.Message)
-							}
-
-							return event
-						},
-					})
-					if err != nil {
-						return fmt.Errorf("initializing Sentry: %w", err)
-					}
-
-					conn, err := pgxpool.New(
-						context.Background(),
-						fmt.Sprintf(
-							"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
-							config.Database.User,
-							config.Database.Password,
-							config.Database.Host,
-							config.Database.Port,
-							config.Database.Name,
-						),
-					)
-					if err != nil {
-						return fmt.Errorf("failed connect to database: %w", err)
-					}
-					defer conn.Close()
-
-					userDomain := NewUserDomain(conn)
-
-					return userDomain.ExportUnprocessedUsersAsCSV(cCtx.Context)
-				},
+				Name:   "migrate",
+				Action: MigrateHandlerAction,
 			},
 			{
 				Name: "blast-email",
@@ -383,7 +147,7 @@ func App() *cli.App {
 						log.Fatal().Err(err).Msg("failed to parse html template")
 					}
 
-					var userList []User
+					var userList []user.User
 
 					if mailCsv != "" {
 						emailList, err := os.ReadFile(mailCsv)
@@ -396,22 +160,22 @@ func App() *cli.App {
 							log.Fatal().Err(err).Msg("failed to parse email list")
 						}
 					} else {
-						userList = append(userList, User{
+						userList = append(userList, user.User{
 							Email: singleRecipient,
 						})
 					}
 
-					mailSender := NewMailSender(&MailConfiguration{
+					mailSender := mailer.NewMailSender(&mailer.MailConfiguration{
 						SmtpHostname: config.Mailer.Hostname,
 						SmtpPort:     config.Mailer.Port,
 						SmtpFrom:     config.Mailer.From,
 						SmtpPassword: config.Mailer.Password,
 					})
 
-					for _, user := range userList {
-						mail := &Mail{
-							RecipientName:  user.Name,
-							RecipientEmail: user.Email,
+					for _, userItem := range userList {
+						mail := &mailer.Mail{
+							RecipientName:  userItem.Name,
+							RecipientEmail: userItem.Email,
 							Subject:        subject,
 							PlainTextBody:  string(plaintextContent),
 							HtmlBody:       string(htmlContent),
@@ -429,9 +193,9 @@ func App() *cli.App {
 							"conferenceEmail":                     config.EmailTemplate.ConferenceEmail,
 							"bankAccounts":                        config.EmailTemplate.BankAccounts,
 						}
-						// Execute handlebars template only if user.Name is not empty
-						if user.Name != "" {
-							emailTemplate["name"] = user.Name
+						// Execute handlebars template only if userItem.Name is not empty
+						if userItem.Name != "" {
+							emailTemplate["name"] = userItem.Name
 						}
 
 						mail.PlainTextBody = plaintextTemplate.MustExec(emailTemplate)
@@ -439,11 +203,11 @@ func App() *cli.App {
 
 						err := mailSender.Send(cCtx.Context, mail)
 						if err != nil {
-							log.Error().Err(err).Msgf("failed to send email to %s", user.Email)
+							log.Error().Err(err).Msgf("failed to send email to %s", userItem.Email)
 							continue
 						}
 
-						log.Info().Msgf("Sending email to %s", user.Email)
+						log.Info().Msgf("Sending email to %s", userItem.Email)
 					}
 					log.Info().Msg("Blasting email done")
 					return nil
@@ -504,8 +268,8 @@ func App() *cli.App {
 					}
 					defer conn.Close()
 
-					userDomain := NewUserDomain(conn)
-					users, err := userDomain.GetUsers(cCtx.Context, UserFilterRequest{Type: TypeParticipant, IsProcessed: isProcessedStr})
+					userDomain := user.NewUserDomain(conn)
+					users, err := userDomain.GetUsers(cCtx.Context, user.UserFilterRequest{Type: user.TypeParticipant, IsProcessed: isProcessedStr})
 					if err != nil {
 						return err
 					}
@@ -573,7 +337,7 @@ func App() *cli.App {
 						return fmt.Errorf("requires `--bulk-verification` or `--single-verification` flag")
 					}
 
-					var students []User
+					var students []user.User
 					if bulkVerification != "" {
 						emailList, err := os.ReadFile(bulkVerification)
 						if err != nil {
@@ -585,7 +349,7 @@ func App() *cli.App {
 							log.Fatal().Err(err).Msg("failed to parse email list")
 						}
 					} else {
-						students = append(students, User{
+						students = append(students, user.User{
 							Email: singleVerification,
 						})
 					}
@@ -611,7 +375,7 @@ func App() *cli.App {
 						return fmt.Errorf("invalid signature public key: %w", err)
 					}
 
-					mailer := NewMailSender(&MailConfiguration{
+					mailer := mailer.NewMailSender(&mailer.MailConfiguration{
 						SmtpHostname: config.Mailer.Hostname,
 						SmtpPort:     config.Mailer.Port,
 						SmtpFrom:     config.Mailer.From,
@@ -633,7 +397,7 @@ func App() *cli.App {
 						return fmt.Errorf("failed to connect to database: %w", err)
 					}
 
-					ticketDomain, err := NewTicketDomain(conn, bucket, signaturePrivateKey, signaturePublicKey, mailer)
+					ticketDomain, err := ticketing.NewTicketDomain(conn, bucket, signaturePrivateKey, signaturePublicKey, mailer)
 					if err != nil {
 						return fmt.Errorf("creating a ticket domain instance: %s", err.Error())
 					}
@@ -717,7 +481,7 @@ func App() *cli.App {
 						return fmt.Errorf("invalid signature public key: %w", err)
 					}
 
-					mailer := NewMailSender(&MailConfiguration{
+					mailer := mailer.NewMailSender(&mailer.MailConfiguration{
 						SmtpHostname: config.Mailer.Hostname,
 						SmtpPort:     config.Mailer.Port,
 						SmtpFrom:     config.Mailer.From,
@@ -740,7 +504,7 @@ func App() *cli.App {
 					}
 					defer conn.Close()
 
-					ticketDomain, err := NewTicketDomain(conn, bucket, signaturePrivateKey, signaturePublicKey, mailer)
+					ticketDomain, err := ticketing.NewTicketDomain(conn, bucket, signaturePrivateKey, signaturePublicKey, mailer)
 					if err != nil {
 						return fmt.Errorf("creating a ticket domain instance: %s", err.Error())
 					}

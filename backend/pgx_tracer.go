@@ -20,7 +20,7 @@ func (t PGXTracer) TraceQueryStart(ctx context.Context, conn *pgx.Conn, data pgx
 		"args": data.Args,
 	})
 
-	return span.Context()
+	return r.Context()
 }
 
 func (t PGXTracer) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryEndData) {

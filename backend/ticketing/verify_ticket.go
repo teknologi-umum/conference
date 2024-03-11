@@ -63,7 +63,7 @@ func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (ticket
 	// Check the ticket if it's been used before. If it is, return ErrInvalidTicket. Decorate it a bit.
 	var rawTicketingResults []Ticketing
 	_, err = t.db.ListTableRecords(ctx, "TODO: Table Id", &rawTicketingResults, nocodb.ListTableRecordOptions{
-		Where: fmt.Sprintf("(Id,eq,%s)~and(Used,eq,false)", ticketId),
+		Where: fmt.Sprintf("(Id,eq,%d)~and(Used,eq,false)", ticketId),
 		Sort:  []nocodb.Sort{nocodb.SortDescending("CreatedAt")},
 		Limit: 1,
 	})

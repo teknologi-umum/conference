@@ -1,6 +1,9 @@
 package user
 
-import "strings"
+import (
+	"errors"
+	"strings"
+)
 
 type ValidationError struct {
 	Errors []string
@@ -9,3 +12,5 @@ type ValidationError struct {
 func (v ValidationError) Error() string {
 	return strings.Join(v.Errors, ", ")
 }
+
+var ErrUserEmailNotFound = errors.New("user email not found")

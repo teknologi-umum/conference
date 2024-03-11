@@ -14,4 +14,3 @@ func (v ValidationError) Error() string {
 }
 
 var ErrInvalidTicket = errors.New("invalid ticket")
-var ErrUserEmailNotFound = errors.New("user email not found")

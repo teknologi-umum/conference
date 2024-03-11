@@ -117,6 +117,45 @@ func (u *UserDomain) GetUsers(ctx context.Context, filter UserFilterRequest) ([]
 	return users, nil
 }
 
+func (u *UserDomain) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	span := sentry.StartSpan(ctx, "user.get_user_by_email", sentry.WithTransactionName("GetUserByEmail"))
+	defer span.Finish()
+
+	var user User
+	var offset int64
+	var found = false
+	for found {
+		var currentUserSets []User
+		pageInfo, err := u.db.ListTableRecords(ctx, u.tableId, &currentUserSets, nocodb.ListTableRecordOptions{
+			Offset: offset,
+			Where:  fmt.Sprintf("(Email,eq,%s)", email),
+		})
+		if err != nil {
+			return user, fmt.Errorf("list table records: %w", err)
+		}
+
+		offset += int64(len(currentUserSets))
+
+		for _, userEntry := range currentUserSets {
+			if userEntry.Email == email {
+				user = userEntry
+				found = true
+				break
+			}
+		}
+
+		if pageInfo.IsLastPage {
+			break
+		}
+	}
+
+	if !found {
+		return user, ErrUserEmailNotFound
+	}
+
+	return user, nil
+}
+
 func (u *UserDomain) ExportUnprocessedUsersAsCSV(ctx context.Context) error {
 	span := sentry.StartSpan(ctx, "user.export_unprocessed_users_as_csv")
 	defer span.Finish()

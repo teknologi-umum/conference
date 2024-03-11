@@ -16,7 +16,7 @@ func (t *TicketDomain) VerifyIsStudent(ctx context.Context, user user.User) (err
 	defer span.Finish()
 
 	var rawTicketingResults []Ticketing
-	_, err = t.db.ListTableRecords(ctx, "TODO: Table Id", &rawTicketingResults, nocodb.ListTableRecordOptions{
+	_, err = t.db.ListTableRecords(ctx, t.tableId, &rawTicketingResults, nocodb.ListTableRecordOptions{
 		Where: fmt.Sprintf("(Email,eq,%s)", user.Email),
 		Sort:  []nocodb.Sort{nocodb.SortDescending("CreatedAt")},
 		Limit: 1,

@@ -2,6 +2,7 @@ package nocodbmock
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -38,7 +39,7 @@ func NewNocoDBMockServer() (*httptest.Server, error) {
 		}
 
 		records, err := documentStorage.GetByTableId(tableId)
-		if err != nil {
+		if err != nil && !errors.Is(err, errNotFound) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
 			_ = json.NewEncoder(w).Encode(errorResponse{Message: "BadRequest [ERROR]: " + err.Error()})

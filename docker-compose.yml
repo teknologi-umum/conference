@@ -46,38 +46,15 @@ services:
       options:
         max-size: 10M
 
-  backend-migrate:
-    build: ./backend
-    entrypoint: /app/conf-backend migrate up
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: conference
-      DB_PASSWORD: VeryStrongPassword
-      DB_NAME: conference
-    depends_on:
-      postgres:
-        condition: service_healthy
-    logging:
-      driver: local
-      options:
-        max-size: 10M
-
   backend:
     build: ./backend
     ports:
       - 127.0.0.1:8080:8080
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USER: conference
-      DB_PASSWORD: VeryStrongPassword
-      DB_NAME: conference
+      NOCODB_BASE_URL: http://nocodb:8080
       PORT: 8080
     depends_on:
-      backend-migrate:
-        condition: service_completed_successfully
-      postgres:
+      nocodb:
         condition: service_healthy
       mailcrab:
         condition: service_started

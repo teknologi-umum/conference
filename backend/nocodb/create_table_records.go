@@ -35,6 +35,7 @@ func (c *Client) CreateTableRecords(ctx context.Context, tableId string, records
 	}
 
 	request.Header.Add("xc-auth", c.apiToken)
+	request.Header.Add("Content-Type", "application/json")
 
 	response, err := c.httpClient.Do(request)
 	if err != nil {

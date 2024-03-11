@@ -37,7 +37,22 @@ func (s *storage) GetByRecordId(tableId string, recordId int64) (record map[stri
 	}
 
 	for _, record := range records {
-		if record["Id"] == recordId {
+		var id int64
+		switch v := record["Id"].(type) {
+		case float64:
+			id = int64(v)
+			break
+		case float32:
+			id = int64(v)
+			break
+		case int:
+			id = int64(v)
+			break
+		case int64:
+			id = v
+			break
+		}
+		if recordId == id {
 			return record, nil
 		}
 	}
@@ -79,7 +94,23 @@ func (s *storage) Update(tableId string, records []map[string]any) (ids []int64,
 	for i := 0; i < len(oldRecords); i++ {
 		// I know that this is O(n^2) but because this is a mock, I don't really care
 		for _, record := range records {
-			if oldRecords[i]["Id"] == record["Id"] {
+			var recordId int64
+			switch v := record["Id"].(type) {
+			case float64:
+				recordId = int64(v)
+				break
+			case float32:
+				recordId = int64(v)
+				break
+			case int:
+				recordId = int64(v)
+				break
+			case int64:
+				recordId = v
+				break
+			}
+
+			if oldRecords[i]["Id"] == recordId {
 				// Found one
 				for key, value := range record {
 					oldRecords[i][key] = value

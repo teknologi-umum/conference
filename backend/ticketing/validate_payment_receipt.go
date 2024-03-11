@@ -32,7 +32,7 @@ func (t *TicketDomain) ValidatePaymentReceipt(ctx context.Context, user user.Use
 
 	// Mark payment status as paid on database
 	var rawTicketingResults []Ticketing
-	_, err := t.db.ListTableRecords(ctx, "TODO: Table Id", &rawTicketingResults, nocodb.ListTableRecordOptions{
+	_, err := t.db.ListTableRecords(ctx, t.tableId, &rawTicketingResults, nocodb.ListTableRecordOptions{
 		Where: fmt.Sprintf("(Email,eq,%s)", user.Email),
 		Sort:  []nocodb.Sort{nocodb.SortDescending("CreatedAt")},
 		Limit: 1,
@@ -142,7 +142,7 @@ harap abaikan email ini. Terima kasih!`,
 		return "", fmt.Errorf("sending mail: %w", err)
 	}
 
-	err = t.db.UpdateTableRecords(ctx, "TODO: Table Id", []any{NullTicketing{
+	err = t.db.UpdateTableRecords(ctx, t.tableId, []any{NullTicketing{
 		Id:        sql.NullInt64{Int64: ticketing.Id, Valid: true},
 		Paid:      sql.NullBool{Bool: true, Valid: true},
 		SHA256Sum: sql.NullString{String: hex.EncodeToString(sha256Sum), Valid: true},

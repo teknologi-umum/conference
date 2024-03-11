@@ -62,7 +62,7 @@ func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (ticket
 
 	// Check the ticket if it's been used before. If it is, return ErrInvalidTicket. Decorate it a bit.
 	var rawTicketingResults []Ticketing
-	_, err = t.db.ListTableRecords(ctx, "TODO: Table Id", &rawTicketingResults, nocodb.ListTableRecordOptions{
+	_, err = t.db.ListTableRecords(ctx, t.tableId, &rawTicketingResults, nocodb.ListTableRecordOptions{
 		Where: fmt.Sprintf("(Id,eq,%d)~and(Used,eq,false)", ticketId),
 		Sort:  []nocodb.Sort{nocodb.SortDescending("CreatedAt")},
 		Limit: 1,
@@ -86,7 +86,7 @@ func (t *TicketDomain) VerifyTicket(ctx context.Context, payload []byte) (ticket
 	}
 
 	// Mark the ticket as used
-	err = t.db.UpdateTableRecords(ctx, "TODO: Table Id", []any{NullTicketing{
+	err = t.db.UpdateTableRecords(ctx, t.tableId, []any{NullTicketing{
 		Id:        sql.NullInt64{Int64: ticketing.Id, Valid: true},
 		Used:      sql.NullBool{Bool: true, Valid: true},
 		UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},

@@ -49,7 +49,7 @@ func (t *TicketDomain) StorePaymentReceipt(ctx context.Context, user user.User, 
 		return fmt.Errorf("uploading to bucket storage: %w", err)
 	}
 
-	err = t.db.CreateTableRecords(ctx, "TODO: Table id", []any{Ticketing{
+	err = t.db.CreateTableRecords(ctx, t.tableId, []any{Ticketing{
 		Email:            user.Email,
 		ReceiptPhotoPath: blobKey,
 		Paid:             false,

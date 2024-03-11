@@ -94,7 +94,7 @@ func ServerHandlerAction(ctx *cli.Context) error {
 		SmtpPassword: config.Mailer.Password,
 	})
 
-	ticketDomain, err := ticketing.NewTicketDomain(database, bucket, signaturePrivateKey, signaturePublicKey, mailSender)
+	ticketDomain, err := ticketing.NewTicketDomain(database, bucket, signaturePrivateKey, signaturePublicKey, mailSender, config.Database.TicketingTableId)
 	if err != nil {
 		return fmt.Errorf("creating ticket domain: %w", err)
 	}

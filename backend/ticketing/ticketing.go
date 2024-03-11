@@ -17,13 +17,14 @@ import (
 
 type TicketDomain struct {
 	db         *nocodb.Client
+	tableId    string
 	bucket     *blob.Bucket
 	privateKey *ed25519.PrivateKey
 	publicKey  *ed25519.PublicKey
 	mailer     *mailer.Mailer
 }
 
-func NewTicketDomain(db *nocodb.Client, bucket *blob.Bucket, privateKey ed25519.PrivateKey, publicKey ed25519.PublicKey, mailer *mailer.Mailer) (*TicketDomain, error) {
+func NewTicketDomain(db *nocodb.Client, bucket *blob.Bucket, privateKey ed25519.PrivateKey, publicKey ed25519.PublicKey, mailer *mailer.Mailer, tableId string) (*TicketDomain, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
@@ -44,12 +45,17 @@ func NewTicketDomain(db *nocodb.Client, bucket *blob.Bucket, privateKey ed25519.
 		return nil, fmt.Errorf("mailer is nil")
 	}
 
+	if tableId == "" {
+		return nil, fmt.Errorf("tableId is nil")
+	}
+	
 	return &TicketDomain{
 		db:         db,
 		bucket:     bucket,
 		privateKey: &privateKey,
 		publicKey:  &publicKey,
 		mailer:     mailer,
+		tableId:    tableId,
 	}, nil
 }
 

@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"conf/administrator"
+	"conf/features"
 	"dario.cat/mergo"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
@@ -10,15 +12,12 @@ import (
 )
 
 type Config struct {
-	FeatureFlags struct {
-		RegistrationClosed bool `yaml:"registration_closed" envconfig:"FEATURE_REGISTRATION_CLOSED" default:"false"`
-	} `yaml:"feature_flags"`
-	Database struct {
-		Host     string `yaml:"host" envconfig:"DB_HOST" default:"localhost"`
-		Port     uint16 `yaml:"port" envconfig:"DB_PORT" default:"5432"`
-		User     string `yaml:"user" envconfig:"DB_USER" default:"conference"`
-		Password string `yaml:"password" envconfig:"DB_PASSWORD" default:"VeryStrongPassword"`
-		Name     string `yaml:"database" envconfig:"DB_NAME" default:"conference"`
+	FeatureFlags features.FeatureFlag `yaml:"feature_flags"`
+	Database     struct {
+		NocoDbBaseUrl    string `yaml:"nocodb_base_url" envconfig:"NOCODB_BASE_URL" default:"http://localhost:8080"`
+		NocoDbApiKey     string `yaml:"nocodb_api_key" envconfig:"NOCODB_API_KEY" default:""`
+		TicketingTableId string `yaml:"ticketing_table_id" envconfig:"TICKETING_TABLE_ID"`
+		UserTableId      string `yaml:"user_table_id" envconfig:"USER_TABLE_ID"`
 	} `yaml:"database"`
 	Environment string `yaml:"environment" envconfig:"ENVIRONMENT" default:"local"`
 	Port        string `yaml:"port" envconfig:"PORT" default:"8080"`
@@ -46,7 +45,8 @@ type Config struct {
 		ConferenceEmail                     string `yaml:"conference_email" envconfig:"EMAIL_TEMPLATE_CONFERENCE_EMAIL"`
 		BankAccounts                        string `yaml:"bank_accounts" envconfig:"EMAIL_TEMPLATE_BANK_ACCOUNTS"` // List of bank accounts for payments in HTML format
 	} `yaml:"email_template"`
-	ValidateTicketKey string `yaml:"validate_payment_key" envconfig:"VALIDATE_PAYMENT_KEY"`
+	ValidateTicketKey        string                        `yaml:"validate_payment_key" envconfig:"VALIDATE_PAYMENT_KEY"`
+	AdministratorUserMapping []administrator.Administrator `yaml:"administrator_user_mapping"`
 }
 
 func GetConfig(configurationFile string) (Config, error) {

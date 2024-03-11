@@ -1,5 +1,8 @@
 feature_flags:
-  registration_closed: false
+  enable_registration: false
+  enable_payment_proof_upload: false
+  enable_call_for_proposal_submission: false
+  enable_administrator_mode: false
 
 environment: local
 

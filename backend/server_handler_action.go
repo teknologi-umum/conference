@@ -10,12 +10,13 @@ import (
 	"os/signal"
 	"time"
 
+	"conf/administrator"
 	"conf/mailer"
+	"conf/nocodb"
 	"conf/server"
 	"conf/ticketing"
 	"conf/user"
 	"github.com/getsentry/sentry-go"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 	"gocloud.dev/blob"
@@ -28,13 +29,12 @@ func ServerHandlerAction(ctx *cli.Context) error {
 	}
 
 	err = sentry.Init(sentry.ClientOptions{
-		Dsn:              "",
-		Debug:            config.Environment != "production",
-		AttachStacktrace: true,
-		SampleRate:       1.0,
-		EnableTracing:    true,
+		Dsn:           "",
+		Debug:         config.Environment != "production",
+		SampleRate:    1.0,
+		EnableTracing: true,
 		TracesSampler: func(ctx sentry.SamplingContext) float64 {
-			if ctx.Span.Name == "GET /internal/ping" {
+			if ctx.Span.Name == "GET /api/public/ping" {
 				return 0
 			}
 
@@ -56,27 +56,15 @@ func ServerHandlerAction(ctx *cli.Context) error {
 	}
 	defer sentry.Flush(time.Minute)
 
-	pgxRawConfig, err := pgxpool.ParseConfig(fmt.Sprintf(
-		"user=%s password=%s host=%s port=%d dbname=%s sslmode=disable",
-		config.Database.User,
-		config.Database.Password,
-		config.Database.Host,
-		config.Database.Port,
-		config.Database.Name,
-	))
+	database, err := nocodb.NewClient(nocodb.ClientOptions{
+		ApiToken:   config.Database.NocoDbApiKey,
+		BaseUrl:    config.Database.NocoDbBaseUrl,
+		HttpClient: &http.Client{Transport: NewSentryRoundTripper(http.DefaultTransport, nil)},
+		Logger:     log.Logger,
+	})
 	if err != nil {
-		log.Fatal().Err(err).Msg("Parsing connection string configuration")
+		return fmt.Errorf("creating database client instance: %w", err)
 	}
-
-	pgxConfig := pgxRawConfig.Copy()
-
-	pgxConfig.ConnConfig.Tracer = &PGXTracer{}
-
-	conn, err := pgxpool.NewWithConfig(ctx.Context, pgxConfig)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to connect to database")
-	}
-	defer conn.Close()
 
 	bucket, err := blob.OpenBucket(context.Background(), config.BlobUrl)
 	if err != nil {
@@ -106,18 +94,35 @@ func ServerHandlerAction(ctx *cli.Context) error {
 		SmtpPassword: config.Mailer.Password,
 	})
 
-	ticketDomain, err := ticketing.NewTicketDomain(conn, bucket, signaturePrivateKey, signaturePublicKey, mailSender)
+	ticketDomain, err := ticketing.NewTicketDomain(database, bucket, signaturePrivateKey, signaturePublicKey, mailSender)
 	if err != nil {
 		return fmt.Errorf("creating ticket domain: %w", err)
 	}
 
-	httpServer := server.NewServer(&server.ServerConfig{
-		UserDomain:                user.NewUserDomain(conn),
-		TicketDomain:              ticketDomain,
-		Environment:               config.Environment,
-		FeatureRegistrationClosed: config.FeatureFlags.RegistrationClosed,
-		ValidateTicketKey:         config.ValidateTicketKey,
+	userDomain, err := user.NewUserDomain(database, config.Database.UserTableId)
+	if err != nil {
+		return fmt.Errorf("creating user domain: %w", err)
+	}
+
+	administratorDomain, err := administrator.NewAdministratorDomain(config.AdministratorUserMapping)
+	if err != nil {
+		return fmt.Errorf("creating administrator domain: %w", err)
+	}
+
+	httpServer, err := server.NewServer(&server.ServerConfig{
+		UserDomain:          userDomain,
+		TicketDomain:        ticketDomain,
+		AdministratorDomain: administratorDomain,
+		FeatureFlag:         &config.FeatureFlags,
+		MailSender:          mailSender,
+		Environment:         config.Environment,
+		ValidateTicketKey:   config.ValidateTicketKey,
+		Hostname:            "",
+		Port:                config.Port,
 	})
+	if err != nil {
+		return fmt.Errorf("creating http server: %w", err)
+	}
 
 	exitSig := make(chan os.Signal, 1)
 	signal.Notify(exitSig, os.Interrupt, os.Kill)

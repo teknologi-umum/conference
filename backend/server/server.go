@@ -1,10 +1,14 @@
 package server
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"time"
 
+	"conf/administrator"
+	"conf/features"
+	"conf/mailer"
 	"conf/ticketing"
 	"conf/user"
 	sentryhttp "github.com/getsentry/sentry-go/http"
@@ -14,37 +18,58 @@ import (
 )
 
 type ServerConfig struct {
-	UserDomain                *user.UserDomain
-	TicketDomain              *ticketing.TicketDomain
-	Environment               string
-	FeatureRegistrationClosed bool
-	ValidateTicketKey         string
-	Hostname                  string
-	Port                      string
+	UserDomain          *user.UserDomain
+	TicketDomain        *ticketing.TicketDomain
+	AdministratorDomain *administrator.AdministratorDomain
+	FeatureFlag         *features.FeatureFlag
+	MailSender          *mailer.Mailer
+	Environment         string
+	ValidateTicketKey   string
+	Hostname            string
+	Port                string
 }
 
 type ServerDependency struct {
-	userDomain         *user.UserDomain
-	ticketDomain       *ticketing.TicketDomain
-	registrationClosed bool
-	validateTicketKey  string
+	userDomain          *user.UserDomain
+	ticketDomain        *ticketing.TicketDomain
+	administratorDomain *administrator.AdministratorDomain
+	featureFlag         *features.FeatureFlag
+	mailSender          *mailer.Mailer
+	validateTicketKey   string
 }
 
-func NewServer(config *ServerConfig) *http.Server {
-	if config.UserDomain == nil || config.TicketDomain == nil {
-		// For production backend application, please don't do what I just did.
-		// Do a proper nil check and validation for each of your config and dependencies.
-		// NEVER call panic(), just return error.
-		// I'm in a hackathon (basically in a rush), so I'm doing this.
-		// Let me remind you again: don't do what I just did.
-		panic("one of the domain dependency is nil")
+func NewServer(config *ServerConfig) (*http.Server, error) {
+	if config.UserDomain == nil {
+		return nil, fmt.Errorf("nil UserDomain")
+	}
+
+	if config.TicketDomain == nil {
+		return nil, fmt.Errorf("nil TicketDomain")
+	}
+
+	if config.AdministratorDomain == nil {
+		return nil, fmt.Errorf("nil AdministratorDomain")
+	}
+
+	if config.FeatureFlag == nil {
+		return nil, fmt.Errorf("nil FeatureFlag")
+	}
+
+	if config.MailSender == nil {
+		return nil, fmt.Errorf("nil MailSender")
+	}
+
+	if config.ValidateTicketKey == "" {
+		return nil, fmt.Errorf("nil ValidateTicketKey")
 	}
 
 	dependencies := &ServerDependency{
-		userDomain:         config.UserDomain,
-		ticketDomain:       config.TicketDomain,
-		registrationClosed: config.FeatureRegistrationClosed,
-		validateTicketKey:  config.ValidateTicketKey,
+		userDomain:          config.UserDomain,
+		ticketDomain:        config.TicketDomain,
+		administratorDomain: config.AdministratorDomain,
+		featureFlag:         config.FeatureFlag,
+		mailSender:          config.MailSender,
+		validateTicketKey:   config.ValidateTicketKey,
 	}
 
 	r := chi.NewRouter()
@@ -53,22 +78,25 @@ func NewServer(config *ServerConfig) *http.Server {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RequestID)
 	// NOTE: Only need to handle CORS, everything else is being handled by the API gateway
-	corsAllowedOrigins := []string{"https://conference.teknologiumum.com"}
+	corsAllowedOrigins := []string{"https://conference.teknologiumum.com", "https://conf.teknologiumum.com"}
 	if config.Environment != "production" {
 		corsAllowedOrigins = append(corsAllowedOrigins, "http://localhost:3000")
 	}
 	r.Use(cors.New(cors.Options{
 		AllowedOrigins:   corsAllowedOrigins,
 		AllowedMethods:   []string{http.MethodPost},
-		AllowCredentials: false,
+		AllowedHeaders:   []string{"Authorization"},
+		AllowCredentials: true,
 		MaxAge:           3600, // 1 day
 	}).Handler)
 
-	r.Use(middleware.Heartbeat("/api/ping"))
+	r.Use(middleware.Heartbeat("/api/public/ping"))
 
-	r.Post("/users", dependencies.RegisterUser)
-	r.Post("/bukti-transfer", dependencies.UploadPaymentProof)
-	r.Post("/scan-tiket", dependencies.DayTicketScan)
+	r.Post("/api/public/register-user", dependencies.RegisterUser)
+	r.Post("/api/public/upload-payment-proof", dependencies.UploadPaymentProof)
+	r.Post("/api/public/scan-ticket", dependencies.DayTicketScan)
+
+	r.Post("/api/administrator/login", dependencies.AdministratorLogin)
 
 	return &http.Server{
 		Addr:              net.JoinHostPort(config.Hostname, config.Port),
@@ -77,5 +105,5 @@ func NewServer(config *ServerConfig) *http.Server {
 		ReadHeaderTimeout: time.Minute,
 		WriteTimeout:      time.Hour,
 		IdleTimeout:       time.Hour,
-	}
+	}, nil
 }

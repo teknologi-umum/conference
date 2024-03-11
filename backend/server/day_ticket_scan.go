@@ -70,7 +70,7 @@ func (s *ServerDependency) DayTicketScan(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	email, name, student, err := s.ticketDomain.VerifyTicket(r.Context(), []byte(requestBody.Code))
+	verifiedTicket, err := s.ticketDomain.VerifyTicket(r.Context(), []byte(requestBody.Code))
 	if err != nil {
 		var validationError *ticketing.ValidationError
 		if errors.As(err, &validationError) {
@@ -106,13 +106,27 @@ func (s *ServerDependency) DayTicketScan(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	userEntry, err := s.userDomain.GetUserByEmail(r.Context(), verifiedTicket.Email)
+	if err != nil {
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"message":    "Internal server error",
+			"errors":     "Internal server error",
+			"request_id": requestId,
+		})
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"message": "Ticket confirmed",
-		"student": student,
-		"name":    name,
-		"email":   email,
+		"student": verifiedTicket.Student,
+		"name":    userEntry.Name,
+		"type":    userEntry.Type,
+		"email":   verifiedTicket.Email,
 	})
 	return
 }

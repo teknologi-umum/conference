@@ -19,7 +19,7 @@ func (s *ServerDependency) RegisterUser(w http.ResponseWriter, r *http.Request) 
 	requestId := middleware.GetReqID(r.Context())
 	sentry.GetHubFromContext(r.Context()).Scope().SetTag("request-id", requestId)
 
-	if s.registrationClosed {
+	if !s.featureFlag.EnableRegistration {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNotAcceptable)
 		_ = json.NewEncoder(w).Encode(map[string]string{

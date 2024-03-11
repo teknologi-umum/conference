@@ -9,6 +9,7 @@ import (
 	"slices"
 
 	"conf/ticketing"
+	"conf/user"
 	"github.com/getsentry/sentry-go"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog/log"
@@ -18,6 +19,11 @@ func (s *ServerDependency) UploadPaymentProof(w http.ResponseWriter, r *http.Req
 	requestId := middleware.GetReqID(r.Context())
 	sentry.GetHubFromContext(r.Context()).Scope().SetTag("request-id", requestId)
 
+	if !s.featureFlag.EnablePaymentProofUpload {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	
 	if err := r.ParseMultipartForm(32 << 10); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -86,7 +92,31 @@ func (s *ServerDependency) UploadPaymentProof(w http.ResponseWriter, r *http.Req
 
 	photoContentType := mime.TypeByExtension(photoExtension)
 
-	err = s.ticketDomain.StorePaymentReceipt(r.Context(), email, photoFile, photoContentType)
+	userEntry, err := s.userDomain.GetUserByEmail(r.Context(), email)
+	if err != nil {
+		if errors.Is(err, user.ErrUserEmailNotFound) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusPreconditionFailed)
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"message":    "User not found",
+				"errors":     err.Error(),
+				"request_id": requestId,
+			})
+			return
+		}
+
+		sentry.GetHubFromContext(r.Context()).CaptureException(err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"message":    "Internal server error",
+			"errors":     "Internal server error",
+			"request_id": requestId,
+		})
+		return
+	}
+
+	err = s.ticketDomain.StorePaymentReceipt(r.Context(), userEntry, photoFile, photoContentType)
 	if err != nil {
 		var validationError *ticketing.ValidationError
 		if errors.As(err, &validationError) {
@@ -95,17 +125,6 @@ func (s *ServerDependency) UploadPaymentProof(w http.ResponseWriter, r *http.Req
 			_ = json.NewEncoder(w).Encode(map[string]string{
 				"message":    "Validation error",
 				"errors":     validationError.Error(),
-				"request_id": requestId,
-			})
-			return
-		}
-
-		if errors.Is(err, ticketing.ErrUserEmailNotFound) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusPreconditionFailed)
-			_ = json.NewEncoder(w).Encode(map[string]string{
-				"message":    "User not found",
-				"errors":     err.Error(),
 				"request_id": requestId,
 			})
 			return

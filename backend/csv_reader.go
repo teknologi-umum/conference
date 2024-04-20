@@ -5,9 +5,11 @@ import (
 	"errors"
 	"io"
 	"strings"
+
+	"conf/user"
 )
 
-func csvReader(file string, mandatoryNameField bool) (users []User, err error) {
+func csvReader(file string, mandatoryNameField bool) (users []user.User, err error) {
 	r := csv.NewReader(strings.NewReader(file))
 	header, err := r.Read()
 	if err != nil {
@@ -31,13 +33,13 @@ func csvReader(file string, mandatoryNameField bool) (users []User, err error) {
 			}
 			name = m["name"]
 		}
-		
+
 		if m["email"] == "" {
 			err = errors.New("email is required")
 			return nil, err
 		}
 		email = m["email"]
-		users = append(users, User{
+		users = append(users, user.User{
 			Name:  name,
 			Email: email,
 		})

@@ -7,28 +7,30 @@ on:
       - master
 
 jobs:
+  scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --debug --only-verified
+
   ci-backend:
     name: Backend
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    container: golang:1.21-bookworm
+    container: golang:1-bookworm
     defaults:
       run:
         working-directory: ./backend
     services:
-      db:
-        image: postgres:15-bookworm
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_PASSWORD: password
-          POSTGRES_USER: postgres
-          POSTGRES_DB: conf
-        options: >-
-          --health-cmd "pg_isready -U postgres -d conf"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
       smtp:
         image: marlonb/mailcrab:latest
         ports:
@@ -36,16 +38,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: TruffleHog OSS
-        uses: trufflesecurity/trufflehog@main
-        with:
-          path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
-          extra_args: --debug --only-verified
 
       - name: Build
         run: go build -buildvcs=false .
@@ -74,16 +66,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: TruffleHog OSS
-        uses: trufflesecurity/trufflehog@main
-        with:
-          path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
-          extra_args: --debug --only-verified
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2

@@ -1,16 +1,49 @@
-package main_test
+package mailer_test
 
 import (
 	"context"
+	"os"
 	"testing"
 
-	main "conf"
+	"conf/mailer"
 	"github.com/getsentry/sentry-go"
 )
 
+var mailSender *mailer.Mailer
+
+func TestMain(m *testing.M) {
+	smtpHostname, ok := os.LookupEnv("SMTP_HOSTNAME")
+	if !ok {
+		smtpHostname = "localhost"
+	}
+	smtpPort, ok := os.LookupEnv("SMTP_PORT")
+	if !ok {
+		smtpPort = "1025"
+	}
+	smtpFrom, ok := os.LookupEnv("SMTP_FROM")
+	if !ok {
+		smtpFrom = ""
+	}
+	smtpPassword, ok := os.LookupEnv("SMTP_PASSWORD")
+	if !ok {
+		smtpPassword = ""
+	}
+
+	mailSender = mailer.NewMailSender(&mailer.MailConfiguration{
+		SmtpHostname: smtpHostname,
+		SmtpPort:     smtpPort,
+		SmtpFrom:     smtpFrom,
+		SmtpPassword: smtpPassword,
+	})
+
+	exitCode := m.Run()
+
+	os.Exit(exitCode)
+}
+
 func TestMailSender(t *testing.T) {
 	t.Run("Happy Scenario", func(t *testing.T) {
-		mail := &main.Mail{
+		mail := &mailer.Mail{
 			RecipientName:  "John Doe",
 			RecipientEmail: "johndoe@example.com",
 			Subject:        "Welcome to TeknumConf, you are on the waiting list",

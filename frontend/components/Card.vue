@@ -16,7 +16,6 @@ defineProps({
             <h3 class="mb-4 text-3xl text-white">{{ title }}</h3>
             <slot></slot>
             <p class="text-lg">{{ description }}</p>
-            
         </div>
     </div>
 </template>

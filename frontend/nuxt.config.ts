@@ -1,5 +1,13 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  extends: ['nuxt-umami'],
+  appConfig: {
+    umami: {
+      id: process.env.UMAMI_ID,
+      host: process.env.UMAMI_HOST,
+      useDirective: true,
+    },
+  },
   runtimeConfig: {
     public: {
       showAnnouncementDate: true,

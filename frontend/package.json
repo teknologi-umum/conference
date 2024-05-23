@@ -23,7 +23,6 @@
   },
   "dependencies": {
     "@sentry/vue": "^7.72.0",
-    "nuxt-umami": "^2.6.2",
     "qrcode.vue": "^3.4.1",
     "vue-qrcode-reader": "^5.3.5"
   }

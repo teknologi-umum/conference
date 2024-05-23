@@ -23,7 +23,7 @@ useHead({
                                 </svg>
                                 <span>We are still preparing for TeknumConf 2024</span>
                             </h3>
-                            <Btn v-umami="{name: 'go-to-2023-page-btn'}" :isLink="true" to="/2023" class="mt-5 lg:mt-15 text-center btn-save-my-spot" size="xl">Discover What You Missed in 2023!</Btn>
+                            <Btn data-umami-event="go-to-2023-page-btn" :isLink="true" to="/2023" class="mt-5 lg:mt-15 text-center btn-save-my-spot" size="xl">Discover What You Missed in 2023!</Btn>
                         </div>
                         <div class="card-right flex flex-grow-1 justify-end items-center">
                             <img src="@/assets/images/logo-white.png" alt="TeknumConf logo" class="w-100 hidden lg:block rounded-full">

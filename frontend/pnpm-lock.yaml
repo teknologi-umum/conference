@@ -14,9 +14,6 @@ importers:
       '@sentry/vue':
         specifier: ^7.72.0
         version: 7.72.0(vue@3.3.4)
-      nuxt-umami:
-        specifier: ^2.6.2
-        version: 2.6.2
       qrcode.vue:
         specifier: ^3.4.1
         version: 3.4.1(vue@3.3.4)
@@ -2852,9 +2849,6 @@ packages:
     resolution: {integrity: sha512-roCfCnQsp/oaHm6PL3HFvvGrwm1d2y1n7G9KzIx+i91eiO4P7fBuaVKibB2e8uqEJBgTwN52KxFha6MJnDykJQ==}
     engines: {node: ^14.18.0 || >=16.10.0}
     hasBin: true
-
-  nuxt-umami@2.6.2:
-    resolution: {integrity: sha512-2EtGdp04jml4967Qgo1lv2jrMPnojuDnJD5aMaNAxbwG4EGTkpRjymNDokLEzDiJEEovkhxrY3pJAX/TO8f4/A==}
 
   nuxt@3.7.3:
     resolution: {integrity: sha512-fh3l3PhL79pHJckHVGebTFYlqXDq1jHAXUcNmS3RTfmJRb1s4qi5kSRgmYUWEI5I4Iu+S0u8wWh2ChvnZMQRog==}
@@ -7324,8 +7318,6 @@ snapshots:
   nuxi@3.9.0:
     optionalDependencies:
       fsevents: 2.3.3
-
-  nuxt-umami@2.6.2: {}
 
   nuxt@3.7.3(@parcel/watcher@2.3.0)(@types/node@18.17.3)(encoding@0.1.13)(rollup@3.29.3)(terser@5.30.3):
     dependencies:
